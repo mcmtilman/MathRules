@@ -58,7 +58,7 @@ extension Operation {
     
     /// Represents a function call, identified by a function name and a list of parameters.
     /// Currently does not verify consistency of function and parameters.
-    public class FunctionCall: BinaryOperation<String, [Expression]> {
+    public class Call: BinaryOperation<String, [Expression]> {
         
         /// Evaluates the function call in given context and answers the result.
         /// Fails if the function does not exist in the context.
@@ -94,36 +94,22 @@ extension Operation {
 
     }
     
-    // MARK: Shorthand functions to create core operations
-    
-    /// Answers a function call.
-    static func call(_ function: String, parameters: [Expression]) -> FunctionCall {
-        FunctionCall(function, parameters)
-    }
-
-    /// Answers a literal value.
-    static func cons(_ value: T) -> Literal {
-        Literal(value)
-    }
-
-    /// Answers a parameter reference.
-    static func param(_ index: Int) -> Parameter {
-        Parameter(index)
-    }
-
 }
 
 
 /**
  Core operations for types conforming to LosslessStringConvertible.
  */
-extension Operation where T: LosslessStringConvertible {
+extension Operation.Literal where T: LosslessStringConvertible {
     
-    // MARK: Creating literals from strings
+    // MARK: Initializing
     
-    /// Answers a literal value for gven type, or nil if not valid.
-    static func const(_ string: String) -> Literal? {
-        T(string).map(Literal.init)
+    /// Creates a literal from given string.
+    /// Fails if not valid.
+    public convenience init?(_ string: String) {
+        guard let value = T(string) else { return nil }
+        
+        self.init(value)
     }
 
 }
