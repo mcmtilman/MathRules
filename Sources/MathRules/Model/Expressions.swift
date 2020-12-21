@@ -41,6 +41,21 @@ public struct Context<T> {
     // Parameters needed by expression being evaluated.
     let parameters: [T]
     
+    // MARK: Initializing
+    
+    /// Creates a context with given uniquely named functions and actual parameters.
+    public init(functions: [Function<T>], parameters: [T]) {
+        self.init(Dictionary(uniqueKeysWithValues: functions.map { f in (f.name, f) }), parameters)
+    }
+    
+    // MARK: Private initializing
+    
+    // Creates a context with given function map and actual parameters.
+    private init(_ functions: [String: Function<T>], _ parameters: [T]) {
+        self.functions = functions
+        self.parameters = parameters
+    }
+    
     // MARK: Accessing by subscripting
 
     // Answers the function with given name or nil if not found.
@@ -57,7 +72,7 @@ public struct Context<T> {
 
     // Answers a copy of the context with the parameters replaced by given list.
     func withParameters(_ parameters: [T]) -> Self {
-        Self(functions: functions, parameters: parameters)
+        Self(functions, parameters)
     }
     
 }
