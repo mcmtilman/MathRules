@@ -85,9 +85,24 @@ public struct Function<T> {
     
     // MARK: Stored properties
 
-    let name: String
+    /// Non-empty function name.
+    public let name: String
     
+    /// List of parameter names.
+    /// Each name should appear only once in the list.
+    public let parameters: [String]
+    
+    // Body of the function.
     let expression: Expression<T>
+    
+    // MARK: Initializing
+
+    // Create a function with given name, parameter names and expression.
+    public init(name: String, parameters: [String], expression: Expression<T>) {
+        self.name = name
+        self.parameters = parameters
+        self.expression = expression
+    }
     
     // MARK: Evaluating
 
