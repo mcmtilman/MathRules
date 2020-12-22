@@ -33,37 +33,57 @@ public class Expression<T> {
  */
 public struct Context<T> {
     
+    /// Function library
+    public struct Library {
+        
+        // MARK: Stored properties
+
+        /// Maps function names to functions.
+        public let functions: [String: Function<T>]
+        
+        // MARK: Initializing
+        
+        /// Creates a library with given functions.
+        /// Fails if duplicate function names exist.
+        public init?(functions: [Function<T>]) {
+            self.functions = Dictionary(functions.map { f in (f.name, f) }) { (first, _) in first }
+            
+            guard self.functions.count == functions.count else { return nil }
+        }
+
+        // MARK: Subscripting
+
+        // Answers the function with given name or nil if none found.
+        subscript(name: String) -> Function<T>? {
+            functions[name]
+        }
+        
+    }
+    
     // MARK: Stored properties
 
-    // User-defined functions.
-    let functions: [String: Function<T>]
+    // Library of user-defined functions.
+    let library: Library
     
-    // Parameters needed by expression being evaluated.
+    // Parameters needed by expression to be evaluated.
     let parameters: [T]
     
     // MARK: Initializing
     
-    /// Creates a context with given uniquely named functions and actual parameters.
-    public init(functions: [Function<T>], parameters: [T]) {
-        self.init(Dictionary(uniqueKeysWithValues: functions.map { f in (f.name, f) }), parameters)
-    }
-    
-    // MARK: Private initializing
-    
-    // Creates a context with given function map and actual parameters.
-    private init(_ functions: [String: Function<T>], _ parameters: [T]) {
-        self.functions = functions
+    /// Creates a context with given function library and actual parameters.
+    public init(library: Library, parameters: [T]) {
+        self.library = library
         self.parameters = parameters
     }
-    
-    // MARK: Accessing by subscripting
 
-    // Answers the function with given name or nil if not found.
+    // MARK: Subscripting
+
+    // Answers the function with given name or nil if none found.
     subscript(function name: String) -> Function<T>? {
-        functions[name]
+        library[name]
     }
     
-    // Answers the parameter at given index or nil if not found.
+    // Answers the parameter at given index or nil if out of range.
     subscript(parameter index: Int) -> T? {
         index >= 0 && index < parameters.count ? parameters[index] : nil
     }
@@ -72,7 +92,7 @@ public struct Context<T> {
 
     // Answers a copy of the context with the parameters replaced by given list.
     func withParameters(_ parameters: [T]) -> Self {
-        Self(functions, parameters)
+        Self(library: library, parameters: parameters)
     }
     
 }
