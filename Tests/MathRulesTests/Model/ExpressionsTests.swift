@@ -27,18 +27,16 @@ class ExpressionTests: XCTestCase {
     
     // Test creating an invalid library with duplicate functions.
     func testInvalidLibrary() {
-        let function1 = Function<Int>(name: "test", parameters: [], expression: Operation.Literal(42))
-        let function2 = Function<Int>(name: "test", parameters: [], expression: Operation.Literal(42))
-        let library = Library(functions: [function1, function2])
+        let functions = ["test", "test"].map { Function<Int>(name: $0, parameters: [], expression: Operation.Literal(42)) }
+        let library = Library(functions: functions)
         
         XCTAssertNil(library)
     }
     
     // Test creating an valid library with multiple functions.
     func testValidLibrary() {
-        let function1 = Function<Int>(name: "test1", parameters: [], expression: Operation.Literal(42))
-        let function2 = Function<Int>(name: "test2", parameters: [], expression: Operation.Literal(42))
-        let library = Library(functions: [function1, function2])
+        let functions = ["test1", "test2"].map { Function<Int>(name: $0, parameters: [], expression: Operation.Literal(42)) }
+        let library = Library(functions: functions)
         
         XCTAssertNotNil(library)
         XCTAssertEqual(library?.functions.count, 2)
