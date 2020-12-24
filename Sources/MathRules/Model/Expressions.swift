@@ -15,12 +15,19 @@
  */
 public class Expression<T> {
     
-    // MARK: Evaluating
+   // MARK: Evaluating
 
-    /// Evaluates the receiver in given context and answers the result.
+    /// Evaluates the receiver in the context with given parameters and answers the result.
     /// Should be abstract method.
-    public func eval(in context: Context<T>) -> T {
+    public func eval(in context: Context<T>, parameters: [T]) -> T {
         fatalError("Subclass responsibility")
+    }
+    
+    // MARK: Iterating
+
+    // Visit the expression and retain elements of given type satisfying the predicate.
+    func filter<T>(_ expressionType: T.Type, _ predicate: (T) -> Bool) -> [T] {
+        []
     }
     
 }
@@ -28,8 +35,7 @@ public class Expression<T> {
 
 /**
  Evaluation context for expressions.
- Contains dictionary of user-defined functions and parameters for the current expression
- to be evaluated.
+ Contains dictionary of user-defined functions.
  */
 public struct Context<T> {
     
@@ -44,8 +50,8 @@ public struct Context<T> {
         // MARK: Initializing
         
         /// Creates a library with given functions.
-        /// Fails if duplicate function names exist.
-        public init?(functions: [Function<T>]) {
+        /// Fails if there are duplicate function names.
+        public init?(functions: [Function<T>] = []) {
             self.functions = Dictionary(functions.map { f in (f.name, f) }) { (first, _) in first }
             
             guard self.functions.count == functions.count else { return nil }
@@ -65,15 +71,11 @@ public struct Context<T> {
     // Library of user-defined functions.
     let library: Library
     
-    // Parameters needed by expression to be evaluated.
-    let parameters: [T]
-    
     // MARK: Initializing
     
-    /// Creates a context with given function library and actual parameters.
-    public init(library: Library, parameters: [T]) {
+    /// Creates a context with given function library.
+    public init(library: Library) {
         self.library = library
-        self.parameters = parameters
     }
 
     // MARK: Subscripting
@@ -81,18 +83,6 @@ public struct Context<T> {
     // Answers the function with given name or nil if none found.
     subscript(function name: String) -> Function<T>? {
         library[name]
-    }
-    
-    // Answers the parameter at given index or nil if out of range.
-    subscript(parameter index: Int) -> T? {
-        index >= 0 && index < parameters.count ? parameters[index] : nil
-    }
-    
-    // MARK: Copying
-
-    // Answers a copy of the context with the parameters replaced by given list.
-    func withParameters(_ parameters: [T]) -> Self {
-        Self(library: library, parameters: parameters)
     }
     
 }
@@ -117,18 +107,36 @@ public struct Function<T> {
     
     // MARK: Initializing
 
-    // Create a function with given name, parameter names and expression.
-    public init(name: String, parameters: [String], expression: Expression<T>) {
+    /// Create a function with given name, parameter names and expression.
+    /// Fails if the function is not valid.
+    public init?(name: String, parameters: [String] = [], expression: Expression<T>) {
         self.name = name
         self.parameters = parameters
         self.expression = expression
+        
+        guard isValid() else { return nil }
     }
     
     // MARK: Evaluating
 
-    // Evaluates the receiver in given context and answers the result.
-    func eval(in context: Context<T>) -> T {
-        expression.eval(in: context)
+    /// Evaluates the receiver in the context with given parameters and answers the result.
+    public func eval(in context: Context<T>, parameters: [T]) -> T {
+        expression.eval(in: context, parameters: parameters)
+    }
+    
+    // MARK: Validating
+
+    /// Answers if the function is valid:
+    /// - The name must not be empty.
+    /// - Nested parameter expressions must refer to valid parameter indices.
+    /// - Parameter names must be unique.
+    func isValid() -> Bool {
+        guard !name.isEmpty else { return false }
+        guard parameters.count == Set(parameters).count else { return false }
+        
+        return expression.filter(Operation<T>.Parameter.self) { param in
+            param.index < 0 || param.index >= parameters.count
+        }.isEmpty
     }
     
 }

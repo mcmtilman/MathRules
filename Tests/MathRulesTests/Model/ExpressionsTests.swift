@@ -19,7 +19,7 @@ class ExpressionTests: XCTestCase {
     
     // Test accessing an empty library.
     func testEmptyLibrary() {
-        guard let library = Library<()>(functions: []) else { return XCTFail("Nil function library") }
+        guard let library = Library<()>() else { return XCTFail("Nil function library") }
         
         XCTAssertEqual(library.functions.count, 0)
         XCTAssertNil(library["test"])
@@ -27,7 +27,8 @@ class ExpressionTests: XCTestCase {
     
     // Test creating an invalid library with duplicate functions.
     func testInvalidLibrary() {
-        let functions = ["test", "test"].map { Function<Int>(name: $0, parameters: [], expression: Operation.Literal(42)) }
+        let functions = ["test", "test"].compactMap { Function<()>(name: $0, expression: Literal(())) }
+        guard functions.count == 2 else { return XCTFail("Nil function") }
         let library = Library(functions: functions)
         
         XCTAssertNil(library)
@@ -35,77 +36,74 @@ class ExpressionTests: XCTestCase {
     
     // Test creating an valid library with multiple functions.
     func testValidLibrary() {
-        let functions = ["test1", "test2"].map { Function<Int>(name: $0, parameters: [], expression: Operation.Literal(42)) }
+        let functions = ["test1", "test2"].compactMap { Function<()>(name: $0, expression: Literal(())) }
+        guard functions.count == 2 else { return XCTFail("Nil function") }
         let library = Library(functions: functions)
         
         XCTAssertNotNil(library)
         XCTAssertEqual(library?.functions.count, 2)
     }
     
-    // Test retrieving an invalid function from a non-empty library.
-    func testInvalidLibraryFunction() {
-        let function = Function<Int>(name: "test", parameters: [], expression: Operation.Literal(42))
-        guard let library = Library(functions: [function]) else { return XCTFail("Nil function library") }
-
-        XCTAssertNil(library["zork"])
-    }
-    
-    // Test retrieving an valid function from a non-empty library.
-    func testValidLibraryFunction() {
-        let function = Function<Int>(name: "test", parameters: [], expression: Operation.Literal(42))
-        guard let library = Library(functions: [function]) else { return XCTFail("Nil function library") }
+    // Test retrieving an known function from a non-empty library.
+    func testKnownLibraryFunction() {
+        let functions = ["test"].compactMap { Function<Int>(name: $0, expression: Literal(42)) }
+        guard functions.count == 1 else { return XCTFail("Nil function") }
+        guard let library = Library(functions: functions) else { return XCTFail("Nil function library") }
 
         XCTAssertNotNil(library["test"])
         XCTAssertEqual(library["test"]?.name, "test")
+    }
+    
+    // Test retrieving an unknown function from a non-empty library.
+    func testUnknownLibraryFunction() {
+        let functions = ["test"].compactMap { Function<Int>(name: $0, expression: Literal(42)) }
+        guard functions.count == 1 else { return XCTFail("Nil function") }
+        guard let library = Library(functions: functions) else { return XCTFail("Nil function library") }
+
+        XCTAssertNil(library["zork"])
     }
     
     // MARK: Testing context
     
     // Test accessing an empty context.
     func testEmptyContext() {
-        guard let library = Library<()>(functions: []) else { return XCTFail("Nil function library") }
-        let context = Context(library: library, parameters: [])
+        guard let library = Library<()>() else { return XCTFail("Nil function library") }
+        let context = Context(library: library)
         
         XCTAssertEqual(library.functions.count, 0)
         XCTAssertNil(context[function: "test"])
-        XCTAssertEqual(context.parameters.count, 0)
-        XCTAssertNil(context[parameter: 0])
     }
 
-    // Test retrieving an invalid function from a non-empty (function) context.
-    func testInvalidContextFunction() {
-        let function = Function<Int>(name: "test", parameters: [], expression: Operation.Literal(42))
-        guard let library = Library(functions: [function]) else { return XCTFail("Nil function library") }
-        let context = Context(library: library, parameters: [])
-        
-        XCTAssertNil(context[function: "zork"])
-    }
-
-    // Test retrieving an valid function from a non-empty (function) context.
-    func testValidContextFunction() {
-        let function = Function<Int>(name: "test", parameters: [], expression: Operation.Literal(42))
-        guard let library = Library(functions: [function]) else { return XCTFail("Nil function library") }
-        let context = Context(library: library, parameters: [])
+    // Test retrieving an known function from a non-empty (function) context.
+    func testKnownContextFunction() {
+        let functions = ["test"].compactMap { Function<Int>(name: $0, expression: Literal(42)) }
+        guard functions.count == 1 else { return XCTFail("Nil function") }
+        guard let library = Library(functions: functions) else { return XCTFail("Nil function library") }
+        let context = Context(library: library)
         
         XCTAssertNotNil(context[function: "test"])
         XCTAssertEqual(context[function: "test"]?.name, "test")
     }
 
-    // Test retrieving an invalid parameter from a non-empty (parameter) context.
-    func testInvalidContextParameter() {
-        guard let library = Library<Int>(functions: []) else { return XCTFail("Nil function library") }
-        let context = Context(library: library, parameters: [42])
+    // Test retrieving an unknown function from a non-empty (function) context.
+    func testUnknownContextFunction() {
+        let functions = ["test"].compactMap { Function<Int>(name: $0, expression: Literal(42)) }
+        guard functions.count == 1 else { return XCTFail("Nil function") }
+        guard let library = Library(functions: functions) else { return XCTFail("Nil function library") }
+        let context = Context(library: library)
         
-        XCTAssertNil(context[parameter: -1])
-        XCTAssertNil(context[parameter: 1])
+        XCTAssertNil(context[function: "zork"])
     }
 
-    // Test retrieving an valid parameter from a non-empty (parameter) context.
-    func testValidContextParameter() {
-        guard let library = Library<Int>(functions: []) else { return XCTFail("Nil function library") }
-        let context = Context(library: library, parameters: [42])
+    // MARK: Testing functions
+    
+    // Test evaluating a function in a context.
+    func testEvalFunction() {
+        guard let library = Library<Int>() else { return XCTFail("Nil function library") }
+        let context = Context(library: library)
+        guard let function = Function<Int>(name: "test", parameters: ["a"], expression: Parameter(0)) else { return XCTFail("Nil function") }
 
-        XCTAssertEqual(context[parameter: 0], 42)
+        XCTAssertEqual(function.eval(in: context, parameters: [42]), 42)
     }
 
 }
@@ -113,7 +111,8 @@ class ExpressionTests: XCTestCase {
 
 extension ExpressionTests {
     
-    // Shortcut for library type.
+    // Shortcuts for expression types.
     typealias Library<T> = Context<T>.Library
-
+    typealias Literal<T> = MathRules.Operation<T>.Literal
+    typealias Parameter<T> = MathRules.Operation<T>.Parameter
 }
