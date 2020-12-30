@@ -26,8 +26,12 @@ public class Expression<T> {
     // MARK: Iterating
 
     // Visit the expression and retain elements of given type satisfying the predicate.
-    func filter<T>(_ expressionType: T.Type, _ predicate: (T) -> Bool) -> [T] {
-        []
+    func filter<E>(_ expressionType: E.Type, _ predicate: (E) -> Bool) -> [E] {
+        if let expression = self as? E, predicate(expression) {
+            return [expression]
+        } else {
+            return []
+        }
     }
     
 }
@@ -126,10 +130,10 @@ public struct Function<T> {
     
     // MARK: Validating
 
-    /// Answers if the function is valid:
-    /// - The name must not be empty.
-    /// - Nested parameter expressions must refer to valid parameter indices.
-    /// - Parameter names must be unique.
+    // Answers if the function is valid:
+    // - The name must not be empty.
+    // - Nested parameter expressions must refer to valid parameter indices.
+    // - Parameter names must be unique.
     func isValid() -> Bool {
         guard !name.isEmpty else { return false }
         guard parameters.count == Set(parameters).count else { return false }

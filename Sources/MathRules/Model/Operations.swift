@@ -30,20 +30,6 @@ public enum Operation<T> {
             self.operand = operand
         }
         
-        // Visit the expression and retain elements of given type satisfying the predicate.
-        override func filter<T>(_ expressionType: T.Type, _ predicate: (T) -> Bool) -> [T] {
-            var filtered: [T] = []
-            
-            if let expression = self as? T, predicate(expression) {
-                filtered.append(expression)
-            }
-            if let nested = operand as? Expression {
-                filtered.append(contentsOf: nested.filter(expressionType, predicate))
-            }
-            
-            return filtered
-        }
-        
     }
 
     /// 'Abstract' superclass representing state and initialization of operations involving two operands.
@@ -61,23 +47,6 @@ public enum Operation<T> {
             self.rhs = rhs
         }
         
-        // Visit the expression and retain elements of given type satisfying the predicate.
-        override func filter<T>(_ expressionType: T.Type, _ predicate: (T) -> Bool) -> [T] {
-            var filtered: [T] = []
-            
-            if let expression = self as? T, predicate(expression) {
-                filtered.append(expression)
-            }
-            if let nested = lhs as? Expression {
-                filtered.append(contentsOf: nested.filter(expressionType, predicate))
-            }
-            if let nested = rhs as? Expression {
-                filtered.append(contentsOf: nested.filter(expressionType, predicate))
-            }
-
-            return filtered
-        }
-        
     }
 
 }
@@ -88,13 +57,13 @@ public enum Operation<T> {
  */
 public extension Operation {
     
-    // MARK: Core operations
-    
-    /// Represents a function call, identified by a function name and a list of parameters.
+    // Represents a function call, identified by a function name and a list of parameters.
     /// Currently does not verify consistency of function and parameters.
     class Call: BinaryOperation<String, [Expression]> {
         
-        /// Evaluates the function call in the context with given parameters and answers the result.
+        // MARK: Evaluating
+
+       /// Evaluates the function call in the context with given parameters and answers the result.
         /// Fails if the function does not exist in the context.
         /// Parameters are evaluated eagerly.
         public override func eval(in context: Context, parameters: [T]) -> T {
@@ -103,11 +72,29 @@ public extension Operation {
             return function.eval(in: context, parameters: rhs.map { $0.eval(in: context, parameters: parameters) })
         }
         
+        // MARK: Iterating
+
+        // Visit the expression and retain elements of given type satisfying the predicate.
+        override func filter<E>(_ expressionType: E.Type, _ predicate: (E) -> Bool) -> [E] {
+            rhs.reduce(into: super.filter(expressionType, predicate)) { list, expression in
+                list.append(contentsOf: expression.filter(expressionType, predicate))
+            }
+        }
+        
     }
     
     /// Represents a constant value.
     class Literal: UnaryOperation<T> {
         
+        // MARK: Computed properties
+
+        // Answers the literal value.
+        var value: T {
+            operand
+        }
+        
+        // MARK: Evaluating
+
         /// Evaluates the literal value in the context with given parameters and answers the literal.
         public override func eval(in context: Context, parameters: [T]) -> T {
             operand
@@ -118,6 +105,15 @@ public extension Operation {
     /// References a parameter in a context.
     class Parameter: UnaryOperation<Int> {
         
+        // MARK: Computed properties
+        
+        // Answers the index in the list of parameters.
+        var index: Int {
+            operand
+        }
+        
+        // MARK: Evaluating
+
         /// Looks up a parameter in the list of parameters.
         /// Fails if the parameter cannot be found.
         public override func eval(in context: Context, parameters: [T]) -> T {
@@ -126,11 +122,6 @@ public extension Operation {
             return parameters[index]
         }
 
-        // Answers the index in the list of parameters
-        var index: Int {
-            operand
-        }
-        
     }
     
 }

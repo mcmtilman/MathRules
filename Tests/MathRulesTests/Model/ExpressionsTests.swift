@@ -97,6 +97,34 @@ class ExpressionTests: XCTestCase {
 
     // MARK: Testing functions
     
+    // Test creating a function with an empty name.
+    func testInvalidFunctionName() {
+        let function = Function<Int>(name: "", expression: Literal(0))
+
+        XCTAssertNil(function)
+    }
+
+    // Test creating a function with a non-empty name.
+    func testValidFunctionName() {
+        let function = Function<Int>(name: "zork", expression: Literal(0))
+
+        XCTAssertNotNil(function)
+    }
+
+    // Test creating a function with references to non-existing parameters.
+    func testInvalidFunctionParameter() {
+        let function = Function<Int>(name: "test", expression: Parameter(0))
+
+        XCTAssertNil(function)
+    }
+
+    // Test creating a function with references to existing parameters.
+    func testValidFunctionParameter() {
+        let function = Function<Int>(name: "test", parameters: ["a", "b"], expression: Parameter(0))
+
+        XCTAssertNotNil(function)
+    }
+
     // Test evaluating a function in a context.
     func testEvalFunction() {
         guard let library = Library<Int>() else { return XCTFail("Nil function library") }
@@ -115,4 +143,5 @@ extension ExpressionTests {
     typealias Library<T> = Context<T>.Library
     typealias Literal<T> = MathRules.Operation<T>.Literal
     typealias Parameter<T> = MathRules.Operation<T>.Parameter
+    
 }
