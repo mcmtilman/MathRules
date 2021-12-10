@@ -170,6 +170,38 @@ class FunctionBuilderTests: XCTestCase {
         XCTAssertEqual(try function.eval(inContext: context, with: [7.0]) as? Double, 13)
     }
     
+    func testDebugDescription() throws {
+        let library = try XCTUnwrap(Library())
+        let builder = FunctionBuilder()
+        let stub = try builder.buildFunction(name: "fib", instructions: [.param(0)], library: library)
+        try library.register(function: stub)
+        let instructions = [
+            Instruction.param(0),
+            .const(0),
+            .apply("<="),
+            .const(0),
+            .param(0),
+            .const(1),
+            .apply("=="),
+            .const(1),
+            .param(0),
+            .const(1),
+            .apply("-"),
+            .apply("fib"),
+            .param(0),
+            .const(2),
+            .apply("-"),
+            .apply("fib"),
+            .apply("+"),
+            .cond,
+            .cond
+        ]
+        let node = try builder.buildNode(name: "fib", instructions: instructions, library: library)
+        let expected = "(cond (<= $0 0.0) 0.0 (cond (== $0 1.0) 1.0 (+ (fib (- $0 1.0)) (fib (- $0 2.0)))))"
+        
+        XCTAssertEqual(node.debugDescription, expected)
+    }
+    
 }
     
 extension FunctionBuilderTests {

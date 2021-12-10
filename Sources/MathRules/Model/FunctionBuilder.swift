@@ -33,20 +33,20 @@ public struct FunctionBuilder<R: Real> {
             self.children = children
         }
         
-        public func debugDescription() -> String {
+        public var debugDescription: String {
             switch instruction {
             case let .const(c):
                 return "\(c)"
             case let .param(p):
                 return "$\(p)"
             case .cond:
-                let params = children?.map { child in " \(child.debugDescription())" } ?? []
+                let params = children?.map { child in " \(child.debugDescription)" } ?? []
                 
-                return "(cond\(params.joined(separator: " ")))"
+                return "(cond\(params.joined()))"
            case let .apply(f):
-                let params = children?.map { child in " \(child.debugDescription())" } ?? []
+                let params = children?.map { child in " \(child.debugDescription)" } ?? []
                 
-                return "(\(f)\(params.joined(separator: " ")))"
+                return "(\(f)\(params.joined()))"
             }
         }
         
@@ -55,6 +55,14 @@ public struct FunctionBuilder<R: Real> {
     // MARK: -
     
     func buildFunction(name: String, instructions: [Instruction], library: Context<R>.Library) throws -> Function<R> {
+        let node = try buildNode(name: name, instructions: instructions, library: library)
+    
+        return Function<R>(name: name, type: try inferType(instructions), isPrimitive: false) { params, context in
+            try node.eval(inContext: context, with: params)
+        }
+    }
+    
+    func buildNode(name: String, instructions: [Instruction], library: Context<R>.Library) throws -> Node {
         var stack = [Node]()
         
         for i in 0 ..< instructions.count {
@@ -77,9 +85,7 @@ public struct FunctionBuilder<R: Real> {
         }
         guard stack.count == 1, let node = stack.first else { throw FunctionError.invalidInstructions }
         
-        return Function<R>(name: name, type: try inferType(instructions), isPrimitive: false) { params, context in
-            try node.eval(inContext: context, with: params)
-        }
+        return node
     }
     
     private func inferType(_ instructions: [Instruction]) throws -> ([(String, Any.Type)], Any.Type) {
