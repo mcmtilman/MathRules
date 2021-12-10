@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  Context.swift
 //  
 //  Created by Michel Tilman on 09/12/2021.
 //  Copyright © 2021 Dotted.Pair.
@@ -76,6 +76,8 @@ public struct Context<R: Real> {
 
 public extension Function {
     
+    // MARK: -
+
     func eval(inContext context: Context<R>, with parameters: [Any]) throws -> Any {
         guard parameters.count == self.parameters.count else { throw EvalError.invalidParameters }
         
@@ -88,15 +90,8 @@ public extension Function {
 
 extension FunctionBuilder.Node {
     
-    private func bool(_ value: Any) throws -> Bool {
-        switch value {
-        case let boolean as Bool:
-            return boolean
-        default:
-            throw EvalError.invalidType
-        }
-    }
-    
+    // MARK: -
+
     func eval(inContext context: Context<R>, with parameters: [Any]) throws -> Any {
         switch instruction {
         case let .const(c):
@@ -113,6 +108,17 @@ extension FunctionBuilder.Node {
             let params = try children?.map { try $0.eval(inContext: context, with: parameters) } ?? []
 
             return try function.eval(inContext: context, with: params)
+        }
+    }
+    
+    // MARK: -
+
+    private func bool(_ value: Any) throws -> Bool {
+        switch value {
+        case let boolean as Bool:
+            return boolean
+        default:
+            throw EvalError.invalidType
         }
     }
     

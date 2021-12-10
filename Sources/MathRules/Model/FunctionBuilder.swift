@@ -48,26 +48,6 @@ public struct FunctionBuilder<R: Real> {
         
         // MARK: -
 
-        /// Debug string representing this node in a Lisp-like format.
-        var debugDescription: String {
-            switch instruction {
-            case let .const(c):
-                return "\(c)"
-            case let .param(p):
-                return "$\(p)"
-            case .cond:
-                let params = children?.map { child in " \(child.debugDescription)" } ?? []
-                
-                return "(cond\(params.joined()))"
-           case let .apply(f):
-                let params = children?.map { child in " \(child.debugDescription)" } ?? []
-                
-                return "(\(f)\(params.joined()))"
-            }
-        }
-        
-        // MARK: -
-
         /// Creates a node for given instruction with optional child nodes.
         init(instruction: Instruction, children: [Node]? = nil) {
             self.instruction = instruction
@@ -130,6 +110,33 @@ public struct FunctionBuilder<R: Real> {
         if let index = (indices.first { $0 < 0 || $0 >= indices.count }) { throw FunctionError.invalidParameterIndex(index) }
 
         return ((0 ..< indices.count).map { ("param\($0)", R.self) }, Double.self)
+    }
+    
+}
+
+
+// MARK: - CustomDebugStringConvertible -
+
+extension FunctionBuilder.Node: CustomDebugStringConvertible {
+    
+    // MARK: -
+
+    /// Debug string representing this node in a Lisp-like format.
+    var debugDescription: String {
+        switch instruction {
+        case let .const(c):
+            return "\(c)"
+        case let .param(p):
+            return "$\(p)"
+        case .cond:
+            let params = children?.map { child in " \(child.debugDescription)" } ?? []
+            
+            return "(cond\(params.joined()))"
+       case let .apply(f):
+            let params = children?.map { child in " \(child.debugDescription)" } ?? []
+            
+            return "(\(f)\(params.joined()))"
+        }
     }
     
 }
