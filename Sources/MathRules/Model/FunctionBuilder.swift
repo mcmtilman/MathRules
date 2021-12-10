@@ -8,32 +8,48 @@
 
 import RealModule
 
+/**
+ * Builds a custom function from a RPN-like stack of instructions.
+ */
 public struct FunctionBuilder<R: Real> {
     
     // MARK: -
     
+    /// 'RPN' instruction for building functions.
     public enum Instruction {
         
+        /// If-then-else expression.
         case cond
+        
+        /// Represents a literal value.
         case const(R)
+        
+        /// Represents a zero-based reference to a parameter during execution.
         case param(Int)
+
+        /// Represents a function call.
         case apply(String)
 
     }
     
     // MARK: -
     
+    /// Building block for representing a user-defined function as a tree.
     class Node {
         
+        // MARK: -
+
+        /// Instruction represented by this node.
         let instruction: Instruction
+        
+        /// Optional child nodes. May represent parameters in case of an apply node,
+        /// or condition and true-false branches in case of a condition node.
         let children: [Node]?
         
-        init(instruction: Instruction, children: [Node]? = nil) {
-            self.instruction = instruction
-            self.children = children
-        }
-        
-        public var debugDescription: String {
+        // MARK: -
+
+        /// Debug string representing this node in a Lisp-like format.
+        var debugDescription: String {
             switch instruction {
             case let .const(c):
                 return "\(c)"
@@ -50,11 +66,20 @@ public struct FunctionBuilder<R: Real> {
             }
         }
         
+        // MARK: -
+
+        /// Creates a node for given instruction with optional child nodes.
+        init(instruction: Instruction, children: [Node]? = nil) {
+            self.instruction = instruction
+            self.children = children
+        }
+        
     }
     
     // MARK: -
     
-    func buildFunction(name: String, instructions: [Instruction], library: Context<R>.Library) throws -> Function<R> {
+    /// Creates a user-defined function with expression wrapping given instructions viewed as a tree.
+    public func buildFunction(name: String, instructions: [Instruction], library: Context<R>.Library) throws -> Function<R> {
         let node = try buildNode(name: name, instructions: instructions, library: library)
     
         return Function<R>(name: name, type: try inferType(instructions), isPrimitive: false) { params, context in
@@ -62,6 +87,7 @@ public struct FunctionBuilder<R: Real> {
         }
     }
     
+    /// Creates a tree representation of the instruction stack.
     func buildNode(name: String, instructions: [Instruction], library: Context<R>.Library) throws -> Node {
         var stack = [Node]()
         
@@ -88,6 +114,10 @@ public struct FunctionBuilder<R: Real> {
         return node
     }
     
+    // MARK: -
+    
+    // 'Infers' the type of the function.
+    // Currently limited to collecting the required parameters, assumed to be of type R.
     private func inferType(_ instructions: [Instruction]) throws -> ([(String, Any.Type)], Any.Type) {
         var indices = Set<Int>()
         
@@ -99,7 +129,7 @@ public struct FunctionBuilder<R: Real> {
         
         if let index = (indices.first { $0 < 0 || $0 >= indices.count }) { throw FunctionError.invalidParameterIndex(index) }
 
-        return ((0 ..< indices.count).map { ("param\($0)", Double.self) }, Double.self)
+        return ((0 ..< indices.count).map { ("param\($0)", R.self) }, Double.self)
     }
     
 }
