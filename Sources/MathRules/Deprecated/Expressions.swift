@@ -19,7 +19,7 @@ public class Expression<T> {
 
     /// Evaluates the receiver in the context with given parameters and answers the result.
     /// Should be abstract method.
-    public func eval(in context: Context<T>, parameters: [T]) -> T {
+    public func eval(in context: DeprecatedContext<T>, parameters: [T]) -> T {
         fatalError("Subclass responsibility")
     }
     
@@ -41,7 +41,7 @@ public class Expression<T> {
  Evaluation context for expressions.
  Contains dictionary of user-defined functions.
  */
-public struct Context<T> {
+public struct DeprecatedContext<T> {
     
     /// Function library
     public struct Library {
@@ -49,13 +49,13 @@ public struct Context<T> {
         // MARK: Stored properties
 
         /// Maps function names to functions.
-        public let functions: [String: Function<T>]
+        public let functions: [String: DeprecatedFunction<T>]
         
         // MARK: Initializing
         
         /// Creates a library with given functions.
         /// Fails if there are duplicate function names.
-        public init?(functions: [Function<T>] = []) {
+        public init?(functions: [DeprecatedFunction<T>] = []) {
             self.functions = Dictionary(functions.map { f in (f.name, f) }) { (first, _) in first }
             
             guard self.functions.count == functions.count else { return nil }
@@ -64,7 +64,7 @@ public struct Context<T> {
         // MARK: Subscripting
 
         // Answers the function with given name or nil if none found.
-        subscript(name: String) -> Function<T>? {
+        subscript(name: String) -> DeprecatedFunction<T>? {
             functions[name]
         }
         
@@ -85,7 +85,7 @@ public struct Context<T> {
     // MARK: Subscripting
 
     // Answers the function with given name or nil if none found.
-    subscript(function name: String) -> Function<T>? {
+    subscript(function name: String) -> DeprecatedFunction<T>? {
         library[name]
     }
     
@@ -95,7 +95,7 @@ public struct Context<T> {
 /**
  Represents user-defined functions.
  */
-public struct Function<T> {
+public struct DeprecatedFunction<T> {
     
     // MARK: Stored properties
 
@@ -124,7 +124,7 @@ public struct Function<T> {
     // MARK: Evaluating
 
     /// Evaluates the receiver in the context with given parameters and answers the result.
-    public func eval(in context: Context<T>, parameters: [T]) -> T {
+    public func eval(in context: DeprecatedContext<T>, parameters: [T]) -> T {
         expression.eval(in: context, parameters: parameters)
     }
     

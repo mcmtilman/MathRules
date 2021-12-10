@@ -14,7 +14,7 @@ public enum Operation<T> {
     
     // MARK: Convenience type aliasses
     
-    public typealias Context = MathRules.Context<T>
+    public typealias Context = MathRules.DeprecatedContext<T>
     public typealias Expression = MathRules.Expression<T>
 
     // MARK: Common implementation classes for operations

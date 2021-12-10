@@ -27,7 +27,7 @@ class ExpressionTests: XCTestCase {
     
     // Test creating an invalid library with duplicate functions.
     func testInvalidLibrary() {
-        let functions = ["test", "test"].compactMap { Function<()>(name: $0, expression: Literal(())) }
+        let functions = ["test", "test"].compactMap { DeprecatedFunction<()>(name: $0, expression: Literal(())) }
         guard functions.count == 2 else { return XCTFail("Nil function") }
         let library = Library(functions: functions)
         
@@ -36,7 +36,7 @@ class ExpressionTests: XCTestCase {
     
     // Test creating an valid library with multiple functions.
     func testValidLibrary() {
-        let functions = ["test1", "test2"].compactMap { Function<()>(name: $0, expression: Literal(())) }
+        let functions = ["test1", "test2"].compactMap { DeprecatedFunction<()>(name: $0, expression: Literal(())) }
         guard functions.count == 2 else { return XCTFail("Nil function") }
         let library = Library(functions: functions)
         
@@ -46,7 +46,7 @@ class ExpressionTests: XCTestCase {
     
     // Test retrieving an known function from a non-empty library.
     func testKnownLibraryFunction() {
-        let functions = ["test"].compactMap { Function<Int>(name: $0, expression: Literal(42)) }
+        let functions = ["test"].compactMap { DeprecatedFunction<Int>(name: $0, expression: Literal(42)) }
         guard functions.count == 1 else { return XCTFail("Nil function") }
         guard let library = Library(functions: functions) else { return XCTFail("Nil function library") }
 
@@ -56,7 +56,7 @@ class ExpressionTests: XCTestCase {
     
     // Test retrieving an unknown function from a non-empty library.
     func testUnknownLibraryFunction() {
-        let functions = ["test"].compactMap { Function<Int>(name: $0, expression: Literal(42)) }
+        let functions = ["test"].compactMap { DeprecatedFunction<Int>(name: $0, expression: Literal(42)) }
         guard functions.count == 1 else { return XCTFail("Nil function") }
         guard let library = Library(functions: functions) else { return XCTFail("Nil function library") }
 
@@ -68,7 +68,7 @@ class ExpressionTests: XCTestCase {
     // Test accessing an empty context.
     func testEmptyContext() {
         guard let library = Library<()>() else { return XCTFail("Nil function library") }
-        let context = Context(library: library)
+        let context = DeprecatedContext(library: library)
         
         XCTAssertEqual(library.functions.count, 0)
         XCTAssertNil(context[function: "test"])
@@ -76,10 +76,10 @@ class ExpressionTests: XCTestCase {
 
     // Test retrieving an known function from a non-empty (function) context.
     func testKnownContextFunction() {
-        let functions = ["test"].compactMap { Function<Int>(name: $0, expression: Literal(42)) }
+        let functions = ["test"].compactMap { DeprecatedFunction<Int>(name: $0, expression: Literal(42)) }
         guard functions.count == 1 else { return XCTFail("Nil function") }
         guard let library = Library(functions: functions) else { return XCTFail("Nil function library") }
-        let context = Context(library: library)
+        let context = DeprecatedContext(library: library)
         
         XCTAssertNotNil(context[function: "test"])
         XCTAssertEqual(context[function: "test"]?.name, "test")
@@ -87,10 +87,10 @@ class ExpressionTests: XCTestCase {
 
     // Test retrieving an unknown function from a non-empty (function) context.
     func testUnknownContextFunction() {
-        let functions = ["test"].compactMap { Function<Int>(name: $0, expression: Literal(42)) }
+        let functions = ["test"].compactMap { DeprecatedFunction<Int>(name: $0, expression: Literal(42)) }
         guard functions.count == 1 else { return XCTFail("Nil function") }
         guard let library = Library(functions: functions) else { return XCTFail("Nil function library") }
-        let context = Context(library: library)
+        let context = DeprecatedContext(library: library)
         
         XCTAssertNil(context[function: "zork"])
     }
@@ -99,28 +99,28 @@ class ExpressionTests: XCTestCase {
     
     // Test creating a function with an empty name.
     func testInvalidFunctionName() {
-        let function = Function<Int>(name: "", expression: Literal(0))
+        let function = DeprecatedFunction<Int>(name: "", expression: Literal(0))
 
         XCTAssertNil(function)
     }
 
     // Test creating a function with a non-empty name.
     func testValidFunctionName() {
-        let function = Function<Int>(name: "zork", expression: Literal(0))
+        let function = DeprecatedFunction<Int>(name: "zork", expression: Literal(0))
 
         XCTAssertNotNil(function)
     }
 
     // Test creating a function with references to non-existing parameters.
     func testInvalidFunctionParameter() {
-        let function = Function<Int>(name: "test", expression: Parameter(0))
+        let function = DeprecatedFunction<Int>(name: "test", expression: Parameter(0))
 
         XCTAssertNil(function)
     }
 
     // Test creating a function with references to existing parameters.
     func testValidFunctionParameter() {
-        let function = Function<Int>(name: "test", parameters: ["a", "b"], expression: Parameter(0))
+        let function = DeprecatedFunction<Int>(name: "test", parameters: ["a", "b"], expression: Parameter(0))
 
         XCTAssertNotNil(function)
     }
@@ -128,8 +128,8 @@ class ExpressionTests: XCTestCase {
     // Test evaluating a function in a context.
     func testEvalFunction() {
         guard let library = Library<Int>() else { return XCTFail("Nil function library") }
-        let context = Context(library: library)
-        guard let function = Function<Int>(name: "test", parameters: ["a"], expression: Parameter(0)) else { return XCTFail("Nil function") }
+        let context = DeprecatedContext(library: library)
+        guard let function = DeprecatedFunction<Int>(name: "test", parameters: ["a"], expression: Parameter(0)) else { return XCTFail("Nil function") }
 
         XCTAssertEqual(function.eval(in: context, parameters: [42]), 42)
     }
@@ -140,7 +140,7 @@ class ExpressionTests: XCTestCase {
 extension ExpressionTests {
     
     // Shortcuts for expression types.
-    typealias Library<T> = Context<T>.Library
+    typealias Library<T> = DeprecatedContext<T>.Library
     typealias Literal<T> = MathRules.Operation<T>.Literal
     typealias Parameter<T> = MathRules.Operation<T>.Parameter
     
