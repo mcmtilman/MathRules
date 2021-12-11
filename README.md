@@ -15,7 +15,8 @@ User-defined functions are built from *instructions*. Instructions are 'entered'
 * an index in a parameter list;
 * an if-then-else condition;
 * a (recursive) function call;
-* mapping a function onto a list of values.
+* applying a mapping function on a list of values;
+* applying a reduction function on a list of values.
 
 ## Dependencies
 
