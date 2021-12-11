@@ -14,7 +14,7 @@ import XCTest
  */
 class FunctionTests: XCTestCase {
     
-    // MARK: Testing arithmetic functions
+    // MARK: Arithmetic function tests
     
     func testAddition() throws {
         let library = try XCTUnwrap(Library())
@@ -64,7 +64,7 @@ class FunctionTests: XCTestCase {
         XCTAssertEqual(try function.eval(inContext: context, with: [9.0]) as? Double, 3)
     }
     
-    // MARK: Testing boolean functions
+    // MARK: Boolean function tests
     
     func testLessThanOrEqualTo() throws {
         let library = try XCTUnwrap(Library())
@@ -95,7 +95,7 @@ class FunctionTests: XCTestCase {
         XCTAssertEqual(try function.eval(inContext: context, with: [3.0, 4.0]) as? Bool, false)
     }
     
-    // MARK: Testing invalid parameter counts
+    // MARK: Invalid parameter tests
     
     func testUnaryFunctionInvalidParameterCount() throws {
         let library = try XCTUnwrap(Library())

@@ -14,7 +14,7 @@ import XCTest
  */
 class ContextTests: XCTestCase {
     
-    // MARK: Testing function library
+    // MARK: Function library tests
     
     func testDefaultLibrary() throws {
         let library = try XCTUnwrap(Library())
@@ -71,7 +71,7 @@ class ContextTests: XCTestCase {
         XCTAssertEqual(function2.parameters[0].0, "param2")
     }
     
-    // MARK: Testing contexts
+    // MARK: Accessing context tests
     
     func testAccessDefaultLibraryContext() throws {
         let library = try XCTUnwrap(Library())

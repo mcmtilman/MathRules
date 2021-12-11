@@ -30,8 +30,11 @@ public struct FunctionBuilder<R: Real> {
         /// Represents a function call.
         case apply(String)
 
-        /// Represents application of a function on a list.
+        /// Represents the application of a transformation function on a list.
         case map(String)
+
+        /// Represents the application of a reduction function on a list.
+        case reduce(String)
 
     }
     
@@ -96,6 +99,14 @@ public struct FunctionBuilder<R: Real> {
                 guard let list = stack.popLast() else { throw FunctionError.invalidInstructions }
 
                 stack.append(Node(instruction: instructions[i], children: [list]))
+             case let .reduce(name):
+                guard let function = library[name],
+                      function.parameters.count == 2 else { throw FunctionError.undefinedFunction(name) }
+                let frame = function.parameters.count
+                let children = Array(stack.suffix(frame))
+
+                stack.removeLast(frame)
+                stack.append(Node(instruction: instructions[i], children: children))
             }
         }
         guard stack.count == 1, let node = stack.first else { throw FunctionError.invalidInstructions }
@@ -149,6 +160,10 @@ extension FunctionBuilder.Node: CustomDebugStringConvertible {
             let params = children?.map { child in " \(child.debugDescription)" } ?? []
             
             return "(map \"\(f)\"\(params.joined()))"
+        case let .reduce(f):
+            let params = children?.map { child in " \(child.debugDescription)" } ?? []
+            
+            return "(reduce \"\(f)\"\(params.joined()))"
         }
     }
     

@@ -124,6 +124,13 @@ extension FunctionBuilder.Node {
             guard let list = try node.eval(inContext: context, with: parameters) as? [Any] else { throw EvalError.invalidType }
 
             return try list.map { try function.eval(inContext: context, with: [$0]) }
+        case let .reduce(name):
+            guard let function = context[function: name], function.parameters.count == 2 else { throw EvalError.unknownFunction(name) }
+            guard let nodes = children, nodes.count == function.parameters.count else { throw EvalError.invalidParameters }
+            guard let list = try nodes[1].eval(inContext: context, with: parameters) as? [Any] else { throw EvalError.invalidType }
+            let initialValue = try nodes[0].eval(inContext: context, with: parameters)
+
+            return try list.reduce(initialValue) { try function.eval(inContext: context, with: [$0, $1]) }
         }
     }
     

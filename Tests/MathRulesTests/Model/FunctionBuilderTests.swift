@@ -14,8 +14,8 @@ import XCTest
  */
 class FunctionBuilderTests: XCTestCase {
     
-    // MARK: Testing function builder
-    
+    // MARK: Custom function builder tests
+
     func testEmptyInstructions() throws {
         let library = try XCTUnwrap(Library())
         let builder = FunctionBuilder()
@@ -57,7 +57,7 @@ class FunctionBuilderTests: XCTestCase {
         XCTAssertNoThrow(try builder.buildFunction(name: "Function", instructions: [.const(3), .apply("sqr")], library: library))
     }
     
-    // MARK: Testing executing custom functions
+    // MARK: Custom function evaluation tests
     
     func testConstantFunction() throws {
         let library = try XCTUnwrap(Library())
@@ -215,6 +215,26 @@ class FunctionBuilderTests: XCTestCase {
         XCTAssertEqual(try function.eval(inContext: context, with: [[1, 2, 3, 4]]) as? [Double], [1, 2, 6, 24])
     }
     
+    func testReduce() throws {
+        let library = try XCTUnwrap(Library())
+        let context = Context(library: library)
+        let builder = FunctionBuilder()
+        let function = try builder.buildFunction(name: "Function", instructions: [.const(0), .param(0), .reduce("+")], library: library)
+        
+        XCTAssertEqual(try function.eval(inContext: context, with: [Array(1...100)]) as? Double, 5050)
+    }
+    
+    func testMapReduce() throws {
+        let library = try XCTUnwrap(Library())
+        let context = Context(library: library)
+        let builder = FunctionBuilder()
+        let function = try builder.buildFunction(name: "Function", instructions: [.const(0), .param(0), .map("sqr"), .reduce("+")], library: library)
+        
+        XCTAssertEqual(try function.eval(inContext: context, with: [Array(1...10)]) as? Double, 385)
+    }
+    
+    // MARK: Debug description tests
+
     func testDebugDescription() throws {
         let library = try XCTUnwrap(Library())
         let builder = FunctionBuilder()
@@ -249,12 +269,23 @@ class FunctionBuilderTests: XCTestCase {
         XCTAssertEqual(node.debugDescription, expected)
     }
     
-    func testDebugMapTwiceDescription() throws {
+    func testMapTwiceDebugDescription() throws {
         let library = try XCTUnwrap(Library())
         let builder = FunctionBuilder()
         let node = try builder.buildNode(name: "Function", instructions: [.param(0), .map("sqr"), .map("sqrt")], library: library)
         let expected = """
             (map "sqrt" (map "sqr" $0))
+            """
+        
+        XCTAssertEqual(node.debugDescription, expected)
+    }
+
+    func testReduceDebugDescription() throws {
+        let library = try XCTUnwrap(Library())
+        let builder = FunctionBuilder()
+        let node = try builder.buildNode(name: "Function", instructions: [.const(0), .param(0), .reduce("+")], library: library)
+        let expected = """
+            (reduce "+" 0 $0)
             """
         
         XCTAssertEqual(node.debugDescription, expected)
