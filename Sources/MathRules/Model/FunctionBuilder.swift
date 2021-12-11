@@ -21,14 +21,17 @@ public struct FunctionBuilder<R: Real> {
         /// If-then-else expression.
         case cond
         
-        /// Represents a literal value.
-        case const(R)
+        /// Represents a literal.
+        case const(Any)
         
         /// Represents a zero-based reference to a parameter during execution.
         case param(Int)
 
         /// Represents a function call.
         case apply(String)
+
+        /// Represents application of a function on a list.
+        case map(String)
 
     }
     
@@ -87,6 +90,12 @@ public struct FunctionBuilder<R: Real> {
                 
                 stack.removeLast(frame)
                 stack.append(Node(instruction: instructions[i], children: children))
+            case let .map(name):
+                guard let function = library[name],
+                      function.parameters.count == 1 else { throw FunctionError.undefinedFunction(name) }
+                guard let list = stack.popLast() else { throw FunctionError.invalidInstructions }
+
+                stack.append(Node(instruction: instructions[i], children: [list]))
             }
         }
         guard stack.count == 1, let node = stack.first else { throw FunctionError.invalidInstructions }
@@ -109,7 +118,7 @@ public struct FunctionBuilder<R: Real> {
         
         if let index = (indices.first { $0 < 0 || $0 >= indices.count }) { throw FunctionError.invalidParameterIndex(index) }
 
-        return ((0 ..< indices.count).map { ("param\($0)", R.self) }, Double.self)
+        return ((0 ..< indices.count).map { ("param\($0)", R.self) }, R.self)
     }
     
 }
@@ -132,10 +141,14 @@ extension FunctionBuilder.Node: CustomDebugStringConvertible {
             let params = children?.map { child in " \(child.debugDescription)" } ?? []
             
             return "(cond\(params.joined()))"
-       case let .apply(f):
+        case let .apply(f):
+             let params = children?.map { child in " \(child.debugDescription)" } ?? []
+             
+             return "(\(f)\(params.joined()))"
+        case let .map(f):
             let params = children?.map { child in " \(child.debugDescription)" } ?? []
             
-            return "(\(f)\(params.joined()))"
+            return "(map \"\(f)\"\(params.joined()))"
         }
     }
     

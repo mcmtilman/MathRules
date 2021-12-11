@@ -26,7 +26,7 @@ public struct Context<R: Real> {
         
         // MARK: -
         
-        /// Creates a library with given functions and variables.
+        /// Creates a library with given primitive functions.
         /// Fails if there are duplicate function names.
         public init?() {
             for function in Function<R>.primitiveFunctions() {
@@ -36,12 +36,13 @@ public struct Context<R: Real> {
 
         // MARK: -
 
-        // Answers the function with given name or nil if none found.
+        /// Answers the function with given name or nil if none found.
         subscript(name: String) -> Function<R>? {
             functions[name]
         }
         
-        func register(function: Function<R>) throws {
+        /// Registers given function. Fails if its name overrides a predefined function.
+       func register(function: Function<R>) throws {
             if let function = functions[function.name], function.isPrimitive {
                 throw FunctionError.duplicateFunction(function.name)
             } else {
@@ -53,7 +54,7 @@ public struct Context<R: Real> {
     
     // MARK: -
 
-    // Library of user-defined functions.
+    // Library of functions.
     let library: Library
     
     // MARK: -
@@ -78,6 +79,10 @@ public extension Function {
     
     // MARK: -
 
+    /// Evaluates a function in given context.
+    ///
+    /// The parameters must match the type of the function.
+    /// Throws an ``EvalError``.
     func eval(inContext context: Context<R>, with parameters: [Any]) throws -> Any {
         guard parameters.count == self.parameters.count else { throw EvalError.invalidParameters }
         
@@ -92,6 +97,10 @@ extension FunctionBuilder.Node {
     
     // MARK: -
 
+    /// Evaluates a the function node in given context.
+    ///
+    /// The parameters must match the type of the function.
+    /// Throws an ``EvalError``.
     func eval(inContext context: Context<R>, with parameters: [Any]) throws -> Any {
         switch instruction {
         case let .const(c):
@@ -105,14 +114,23 @@ extension FunctionBuilder.Node {
             return try nodes[path].eval(inContext: context, with: parameters)
         case let .apply(name):
             guard let function = context[function: name] else { throw EvalError.unknownFunction(name) }
-            let params = try children?.map { try $0.eval(inContext: context, with: parameters) } ?? []
+            guard let nodes = children, nodes.count == function.parameters.count else { throw EvalError.invalidParameters }
+            let params = try nodes.map { try $0.eval(inContext: context, with: parameters) }
 
             return try function.eval(inContext: context, with: params)
+        case let .map(name):
+            guard let function = context[function: name], function.parameters.count == 1 else { throw EvalError.unknownFunction(name) }
+            guard let nodes = children, nodes.count == 1, let node = nodes.first else { throw EvalError.invalidParameters }
+            guard let list = try node.eval(inContext: context, with: parameters) as? [Any] else { throw EvalError.invalidType }
+
+            return try list.map { try function.eval(inContext: context, with: [$0]) }
         }
     }
     
     // MARK: -
 
+    // Casts given value into a Bool.
+    // Throws an ``EvalError`` if not possible.
     private func bool(_ value: Any) throws -> Bool {
         switch value {
         case let boolean as Bool:

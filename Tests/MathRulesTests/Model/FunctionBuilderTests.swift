@@ -65,7 +65,7 @@ class FunctionBuilderTests: XCTestCase {
         let builder = FunctionBuilder()
         let function = try builder.buildFunction(name: "Function", instructions: [.const(3)], library: library)
         
-        XCTAssertEqual(try function.eval(inContext: context, with: []) as? Double, 3)
+        XCTAssertEqual(try function.eval(inContext: context, with: []) as? Int, 3)
     }
     
     func testIdentityFunction() throws {
@@ -99,8 +99,8 @@ class FunctionBuilderTests: XCTestCase {
         let library = try XCTUnwrap(Library())
         let context = Context(library: library)
         let builder = FunctionBuilder()
-        let instructions = [
-            Instruction.param(0),
+        let instructions: [Instruction] = [
+            .param(0),
             .apply("sqr"),
             .param(1),
             .apply("sqr"),
@@ -109,7 +109,7 @@ class FunctionBuilderTests: XCTestCase {
         ]
         let function = try builder.buildFunction(name: "Function", instructions: instructions, library: library)
         
-        XCTAssertEqual(try function.eval(inContext: context, with: [3.0, 4.0]) as? Double, 5)
+        XCTAssertEqual(try function.eval(inContext: context, with: [3, 4]) as? Double, 5)
     }
     
     func testFactorial() throws {
@@ -118,13 +118,13 @@ class FunctionBuilderTests: XCTestCase {
         let builder = FunctionBuilder()
         let stub = try builder.buildFunction(name: "fac", instructions: [.param(0)], library: library)
         try library.register(function: stub)
-        let instructions = [
-            Instruction.param(0),
-            .const(0.0),
-            .apply("<="),
-            .const(1.0),
+        let instructions: [Instruction] = [
             .param(0),
-            .const(1.0),
+            .const(0),
+            .apply("<="),
+            .const(1),
+            .param(0),
+            .const(1),
             .apply("-"),
             .apply("fac"),
             .param(0),
@@ -134,7 +134,7 @@ class FunctionBuilderTests: XCTestCase {
         let function = try builder.buildFunction(name: "fac", instructions: instructions, library: library)
         try library.register(function: function)
         
-        XCTAssertEqual(try function.eval(inContext: context, with: [5.0]) as? Double, 120)
+        XCTAssertEqual(try function.eval(inContext: context, with: [5]) as? Double, 120)
     }
     
     func testFibonacci() throws {
@@ -143,8 +143,8 @@ class FunctionBuilderTests: XCTestCase {
         let builder = FunctionBuilder()
         let stub = try builder.buildFunction(name: "fib", instructions: [.param(0)], library: library)
         try library.register(function: stub)
-        let instructions = [
-            Instruction.param(0),
+        let instructions: [Instruction] = [
+            .param(0),
             .const(0),
             .apply("<="),
             .const(0),
@@ -167,7 +167,52 @@ class FunctionBuilderTests: XCTestCase {
         let function = try builder.buildFunction(name: "fib", instructions: instructions, library: library)
         try library.register(function: function)
         
-        XCTAssertEqual(try function.eval(inContext: context, with: [7.0]) as? Double, 13)
+        XCTAssertEqual(try function.eval(inContext: context, with: [7]) as? Double, 13)
+    }
+    
+    func testMapSquare() throws {
+        let library = try XCTUnwrap(Library())
+        let context = Context(library: library)
+        let builder = FunctionBuilder()
+        let function = try builder.buildFunction(name: "Function", instructions: [.param(0), .map("sqr")], library: library)
+        
+        XCTAssertEqual(try function.eval(inContext: context, with: [[1, 2, 3, 4, 5]]) as? [Double], [1, 4, 9, 16, 25])
+    }
+    
+    func testMapTwice() throws {
+        let library = try XCTUnwrap(Library())
+        let context = Context(library: library)
+        let builder = FunctionBuilder()
+        let function = try builder.buildFunction(name: "Function", instructions: [.param(0), .map("sqr"), .map("sqrt")], library: library)
+        
+        XCTAssertEqual(try function.eval(inContext: context, with: [[1, 2, 3, 4, 5]]) as? [Double], [1, 2, 3, 4, 5])
+    }
+    
+    func testMapFactorial() throws {
+        let library = try XCTUnwrap(Library())
+        let context = Context(library: library)
+        let builder = FunctionBuilder()
+        let stub = try builder.buildFunction(name: "fac", instructions: [.param(0)], library: library)
+        try library.register(function: stub)
+        let instructions: [Instruction] = [
+            .param(0),
+            .const(0),
+            .apply("<="),
+            .const(1),
+            .param(0),
+            .const(1),
+            .apply("-"),
+            .apply("fac"),
+            .param(0),
+            .apply("*"),
+            .cond
+        ]
+        let factorial = try builder.buildFunction(name: "fac", instructions: instructions, library: library)
+        try library.register(function: factorial)
+
+        let function = try builder.buildFunction(name: "Function", instructions: [.param(0), .map("fac")], library: library)
+        
+        XCTAssertEqual(try function.eval(inContext: context, with: [[1, 2, 3, 4]]) as? [Double], [1, 2, 6, 24])
     }
     
     func testDebugDescription() throws {
@@ -175,8 +220,8 @@ class FunctionBuilderTests: XCTestCase {
         let builder = FunctionBuilder()
         let stub = try builder.buildFunction(name: "fib", instructions: [.param(0)], library: library)
         try library.register(function: stub)
-        let instructions = [
-            Instruction.param(0),
+        let instructions: [Instruction] = [
+            .param(0),
             .const(0),
             .apply("<="),
             .const(0),
@@ -197,11 +242,24 @@ class FunctionBuilderTests: XCTestCase {
             .cond
         ]
         let node = try builder.buildNode(name: "fib", instructions: instructions, library: library)
-        let expected = "(cond (<= $0 0.0) 0.0 (cond (== $0 1.0) 1.0 (+ (fib (- $0 1.0)) (fib (- $0 2.0)))))"
+        let expected = """
+            (cond (<= $0 0) 0 (cond (== $0 1) 1 (+ (fib (- $0 1)) (fib (- $0 2)))))
+            """
         
         XCTAssertEqual(node.debugDescription, expected)
     }
     
+    func testDebugMapTwiceDescription() throws {
+        let library = try XCTUnwrap(Library())
+        let builder = FunctionBuilder()
+        let node = try builder.buildNode(name: "Function", instructions: [.param(0), .map("sqr"), .map("sqrt")], library: library)
+        let expected = """
+            (map "sqrt" (map "sqr" $0))
+            """
+        
+        XCTAssertEqual(node.debugDescription, expected)
+    }
+
 }
     
 extension FunctionBuilderTests {

@@ -8,26 +8,37 @@
 
 import RealModule
 
+/**
+ Represents a primitive or a user-defined function.
+ The implementation is encapsulated in a closure.
+ */
 public struct Function<R: Real> {
     
     // MARK: -
     
+    /// The function name must be unique in a given context.
     let name: String
     
+    /// Signature of the function. Parameters have a type and a name.
     let type: ([(String, Any.Type)], Any.Type)
     
+    /// Flag indicating if this is a primitive functions..
     let isPrimitive: Bool
 
-    /// An expression maps a list of parameters and a context onto  result.
+    /// An expression maps a list of parameters and a context onto a result.
     /// Expressions for primitive functions typically ignore the context.
     let expression: ([Any], Context<R>) throws -> Any
     
+    // MARK: -
+    
+    /// Answers the parameter types,
     var parameters: [(String, Any.Type)] {
         type.0
     }
     
     // MARK: -
 
+    /// Creates a function with given name, type and implementation.
     public init(name: String, type: ([(String, Any.Type)], Any.Type), isPrimitive: Bool = true, expression: @escaping ([Any], Context<R>) throws -> Any) {
         self.name = name
         self.type = type
@@ -37,16 +48,20 @@ public struct Function<R: Real> {
 
 }
 
-// MARK: - Standard functions -
+// MARK: - Primitive functions -
 
 extension Function {
     
     // MARK: -
 
+    // Casts given value into a Real number.
+    // Throws an ``EvalError`` if not possible.
     private static func real(_ value: Any) throws -> R {
         switch value {
         case let real as R:
             return real
+        case let integer as Int:
+            return R(integer)
         default:
             throw EvalError.invalidType
         }
@@ -54,7 +69,8 @@ extension Function {
     
     // MARK: -
 
-   static func arithmeticFunctions() -> [Function] {
+    /// Returns a list of primitive arithmetic functions.
+    static func arithmeticFunctions() -> [Function] {
         [
             Function(name: "+", type: ([("lhs", R.self), ("rhs", R.self)], R.self)) { params, _ in
                 try real(params[0]) + real(params[1])
@@ -79,6 +95,7 @@ extension Function {
         ]
     }
     
+    /// Returns a list of primitive boolean functions.
     static func booleanFunctions() -> [Function] {
         [
             Function(name: "<=", type: ([("lhs", R.self), ("rhs", R.self)], Bool.self)) { params, _ in
@@ -93,6 +110,7 @@ extension Function {
         ]
     }
 
+    /// Returns a list of all primitive functions.
     static func primitiveFunctions() -> [Function] {
         arithmeticFunctions() + booleanFunctions()
     }
