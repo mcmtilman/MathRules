@@ -15,12 +15,16 @@ User-defined functions are built from *instructions*. Instructions are 'entered'
 * an index in a parameter list;
 * an if-then-else condition;
 * a (recursive) function call;
-* mapping a function onto a list of variable.
+* mapping a function onto a list of values.
 
 ## Dependencies
 
 MathRules depends on the *swift-numerics* package.
 
+## Compatibility
+
+SwiftPuLP was tested on macOS Big Sur 11.6.1 with XCode 13.1.
+
 ## Status
 
-Very early draft, with cleanup, renaming, unit testing and documentation to do first.
+Work in progress.
