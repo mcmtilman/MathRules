@@ -11,8 +11,8 @@
  */
 public enum FunctionError: Error, Equatable {
 
-    /// Currently indicates that the condition is not a ternary operator.
-    case invalidCondition
+    /// An attempt is made to register a UDF overriding a predefined function.
+    case duplicateFunction(String)
     
     /// The instruction stack is not correct.
     case invalidInstructions
@@ -20,11 +20,8 @@ public enum FunctionError: Error, Equatable {
     /// Parameter references should be in the range 0 ..< parameters count.
     case invalidParameterIndex(Int)
     
-    /// An attempt is made to register a UDF overriding a predefined function.
-    case duplicateFunction(String)
-    
     /// Occurs when a function call or map references a non-existing function (name).
-    case undefinedFunction(String)
+    case unknownFunction(String)
 
 }
 
@@ -36,11 +33,11 @@ public enum FunctionError: Error, Equatable {
  */
 public enum EvalError: Error, Equatable {
     
-    /// A parameter or constant does not have the expected type.
-    case invalidType
-    
     /// An attempt is made to pass the wrong (number of) parameters to a function call or condition operator.
     case invalidParameters
+    
+    /// A parameter or constant does not have the expected type.
+    case invalidType
     
     /// An attempt is made to call or map a function with a non-existing name.
     case unknownFunction(String)

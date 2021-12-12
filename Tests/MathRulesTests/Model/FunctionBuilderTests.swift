@@ -46,7 +46,7 @@ class FunctionBuilderTests: XCTestCase {
         let builder = FunctionBuilder()
         
         XCTAssertThrowsError(try builder.buildFunction(name: "Function", instructions: [.apply("Zork")], library: library)) { error in
-            XCTAssertEqual(error as? FunctionError, .undefinedFunction("Zork"))
+            XCTAssertEqual(error as? FunctionError, .unknownFunction("Zork"))
         }
     }
 
@@ -283,9 +283,9 @@ class FunctionBuilderTests: XCTestCase {
     func testReduceDebugDescription() throws {
         let library = try XCTUnwrap(Library())
         let builder = FunctionBuilder()
-        let node = try builder.buildNode(name: "Function", instructions: [.const(0), .param(0), .reduce("+")], library: library)
+        let node = try builder.buildNode(name: "Function", instructions: [.const(0), .const([1, 2, 3, 4, 5]), .reduce("+")], library: library)
         let expected = """
-            (reduce "+" 0 $0)
+            (reduce "+" 0 [1, 2, 3, 4, 5])
             """
         
         XCTAssertEqual(node.debugDescription, expected)
@@ -300,6 +300,5 @@ extension FunctionBuilderTests {
     typealias Library = Context.Library
     typealias Function = MathRules.Function<Double>
     typealias FunctionBuilder = MathRules.FunctionBuilder<Double>
-    typealias Instruction = FunctionBuilder.Instruction
 
 }
