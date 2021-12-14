@@ -6,43 +6,49 @@
 //  Licensed under Apache License v2.0.
 //
 
-import RealModule
+/**
+ Represents a primitive or a user-defined function.
+ */
+public typealias Real = Double
+
+
+// MARK: -
 
 /**
  Represents a primitive or a user-defined function.
  The implementation is encapsulated in a closure.
  */
-public struct Function<R: Real> {
+public struct Function {
     
     // MARK: -
     
     /// The function name must be unique in a given context.
-    let name: String
+    public let name: String
     
     /// Signature of the function. Parameters have a type and a name.
-    let type: ([(String, Any.Type)], Any.Type)
+    public let type: ([(String, Any.Type)], Any.Type)
     
-    /// Flag indicating if this is a primitive functions..
-    let isPrimitive: Bool
+    /// Flag indicating if this is a predefined function.
+    public let isPredefined: Bool
 
     /// An expression maps a list of parameters and a context onto a result.
     /// Expressions for primitive functions typically ignore the context.
-    let expression: ([Any], Context<R>) throws -> Any
+    let expression: ([Value], Context) throws -> Value
     
     // MARK: -
     
-    /// Answers the parameter types,
-    var parameters: [(String, Any.Type)] {
-        type.0
+    /// Answers the number of parameters,
+    public var parameterCount: Int {
+        type.0.count
     }
     
     // MARK: -
 
     /// Creates a function with given name, type and implementation.
-    public init(name: String, type: ([(String, Any.Type)], Any.Type), isPrimitive: Bool = true, expression: @escaping ([Any], Context<R>) throws -> Any) {
+    public init(name: String, type: ([(String, Any.Type)], Any.Type), isPredefined: Bool = true, expression: @escaping ([Value], Context) throws -> Value) {
         self.name = name
         self.type = type
-        self.isPrimitive = isPrimitive
+        self.isPredefined = isPredefined
         self.expression = expression
     }
 
@@ -54,43 +60,28 @@ extension Function {
     
     // MARK: -
 
-    // Casts given value into a Real number.
-    // Throws an ``EvalError`` if not possible.
-    private static func real(_ value: Any) throws -> R {
-        switch value {
-        case let real as R:
-            return real
-        case let integer as Int:
-            return R(integer)
-        default:
-            throw EvalError.invalidType
-        }
-    }
-    
-    // MARK: -
-
     /// Returns a list of primitive arithmetic functions.
     static func arithmeticFunctions() -> [Function] {
         [
-            Function(name: "+", type: ([("lhs", R.self), ("rhs", R.self)], R.self)) { params, _ in
-                try real(params[0]) + real(params[1])
+            Function(name: "+", type: ([("lhs", Real.self), ("rhs", Real.self)], Real.self)) { params, _ in
+                try .real(real(params[0]) + real(params[1]))
             },
-            Function(name: "-", type: ([("lhs", R.self), ("rhs", R.self)], R.self)) { params, _ in
-                try real(params[0]) - real(params[1])
+            Function(name: "-", type: ([("lhs", Real.self), ("rhs", Real.self)], Real.self)) { params, _ in
+                try .real(real(params[0]) - real(params[1]))
             },
-            Function(name: "*", type: ([("lhs", R.self), ("rhs", R.self)], R.self)) { params, _ in
-                try real(params[0]) * real(params[1])
+            Function(name: "*", type: ([("lhs", Real.self), ("rhs", Real.self)], Real.self)) { params, _ in
+                try .real(real(params[0]) * real(params[1]))
             },
-            Function(name: "/", type: ([("lhs", R.self), ("rhs", R.self)], R.self)) { params, _ in
-                try real(params[0]) / real(params[1])
+            Function(name: "/", type: ([("lhs", Real.self), ("rhs", Real.self)], Real.self)) { params, _ in
+                try .real(real(params[0]) / real(params[1]))
             },
-            Function(name: "sqr", type: ([("value", R.self)], R.self)) { params, _ in
+            Function(name: "sqr", type: ([("value", Real.self)], Real.self)) { params, _ in
                 let value = try real(params[0])
                 
-                return value * value
+                return .real(value * value)
             },
-            Function(name: "sqrt", type: ([("value", R.self)], R.self)) { params, _ in
-                try real(params[0]).squareRoot()
+            Function(name: "sqrt", type: ([("value", Real.self)], Real.self)) { params, _ in
+                try .real(real(params[0]).squareRoot())
             },
         ]
     }
@@ -98,14 +89,14 @@ extension Function {
     /// Returns a list of primitive boolean functions.
     static func booleanFunctions() -> [Function] {
         [
-            Function(name: "<=", type: ([("lhs", R.self), ("rhs", R.self)], Bool.self)) { params, _ in
-                try real(params[0]) <= real(params[1])
+            Function(name: "<=", type: ([("lhs", Real.self), ("rhs", Real.self)], Bool.self)) { params, _ in
+                try .bool(real(params[0]) <= real(params[1]))
             },
-            Function(name: "==", type: ([("lhs", R.self), ("rhs", R.self)], Bool.self)) { params, _ in
-                try real(params[0]) == real(params[1])
+            Function(name: "==", type: ([("lhs", Real.self), ("rhs", Real.self)], Bool.self)) { params, _ in
+                try .bool(real(params[0]) == real(params[1]))
             },
-            Function(name: ">=", type: ([("lhs", R.self), ("rhs", R.self)], Bool.self)) { params, _ in
-                try real(params[0]) >= real(params[1])
+            Function(name: ">=", type: ([("lhs", Real.self), ("rhs", Real.self)], Bool.self)) { params, _ in
+                try .bool(real(params[0]) >= real(params[1]))
             },
         ]
     }
@@ -115,4 +106,19 @@ extension Function {
         arithmeticFunctions() + booleanFunctions()
     }
 
+    // MARK: -
+
+    // Casts given value into a Real number.
+    // Throws an ``EvalError`` if not possible.
+    private static func real(_ value: Value) throws -> Real {
+        switch value {
+        case let .real(v):
+            return v
+        case let .int(i):
+            return Real(i)
+        default:
+            throw EvalError.invalidType
+        }
+    }
+    
 }

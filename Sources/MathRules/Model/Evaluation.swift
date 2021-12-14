@@ -6,6 +6,26 @@
 //  Licensed under Apache License v2.0.
 //
 
+/**
+ Constant value.
+ */
+public enum Value: Equatable {
+    
+    /// Boolean value.
+    case bool(Bool)
+
+    /// Integer value.
+    case int(Int)
+
+    /// Real value.
+    case real(Real)
+
+    /// List of Int.
+    indirect case list([Value])
+    
+}
+
+
 // MARK: - Evaluating -
 
 public extension Function {
@@ -16,8 +36,8 @@ public extension Function {
     ///
     /// The parameters must match the type of the function.
     /// Throws an ``EvalError``.
-    func eval(inContext context: Context<R>, with parameters: [Any]) throws -> Any {
-        guard parameters.count == self.parameters.count else { throw EvalError.invalidParameters }
+    func eval(inContext context: Context, with parameters: [Value]) throws -> Value {
+        guard parameters.count == parameterCount else { throw EvalError.invalidParameters }
         
         return try expression(parameters, context)
     }
@@ -27,12 +47,12 @@ public extension Function {
 
 // MARK: -
 
-extension FunctionBuilder.ConstantNode {
+extension ConstantNode {
     
     // MARK: -
     
     /// Evaluates the constant node in given context.
-    func eval<T>(inContext context: Context<T>, with parameters: [Any]) throws -> Any {
+    func eval(inContext context: Context, with parameters: [Value]) throws -> Value {
         value
     }
     
@@ -41,14 +61,14 @@ extension FunctionBuilder.ConstantNode {
 
 // MARK: -
 
-extension FunctionBuilder.ParameterNode {
+extension ParameterNode {
     
     // MARK: -
     
     /// Evaluates the parameter node in given context.
     ///
     /// The index must reference a valid parameter.
-    func eval<T>(inContext context: Context<T>, with parameters: [Any]) throws -> Any {
+    func eval(inContext context: Context, with parameters: [Value]) throws -> Value {
         parameters[index]
     }
     
@@ -57,14 +77,14 @@ extension FunctionBuilder.ParameterNode {
 
 // MARK: -
 
-extension FunctionBuilder.ConditionNode {
+extension ConditionNode {
     
     // MARK: -
 
     /// Evaluates the condition node in given context.
     ///
     /// Throws an ``EvalError``.
-    func eval<T>(inContext context: Context<T>, with parameters: [Any]) throws -> Any {
+    func eval(inContext context: Context, with parameters: [Value]) throws -> Value {
         let node = try bool(testNode.eval(inContext: context, with: parameters)) ? trueNode : falseNode
         
         return try node.eval(inContext: context, with: parameters)
@@ -74,9 +94,9 @@ extension FunctionBuilder.ConditionNode {
 
     // Casts given value into a Bool.
     // Throws an ``EvalError`` if not possible.
-    private func bool(_ value: Any) throws -> Bool {
+    private func bool(_ value: Value) throws -> Bool {
         switch value {
-        case let boolean as Bool:
+        case let .bool(boolean):
             return boolean
         default:
             throw EvalError.invalidType
@@ -87,7 +107,7 @@ extension FunctionBuilder.ConditionNode {
 
 // MARK: -
 
-extension FunctionBuilder.ApplyNode {
+extension ApplyNode {
     
     // MARK: -
 
@@ -95,9 +115,9 @@ extension FunctionBuilder.ApplyNode {
     ///
     /// The parameters must match the type of the function.
     /// Throws an ``EvalError``.
-    func eval<T>(inContext context: Context<T>, with parameters: [Any]) throws -> Any {
+    func eval(inContext context: Context, with parameters: [Value]) throws -> Value {
         guard let function = context[function: name] else { throw EvalError.unknownFunction(name) }
-        guard parameterNodes.count == function.parameters.count else { throw EvalError.invalidParameters }
+        guard parameterNodes.count == function.parameterCount else { throw EvalError.invalidParameters }
         let parameters = try parameterNodes.map { try $0.eval(inContext: context, with: parameters) }
 
         return try function.eval(inContext: context, with: parameters)
@@ -108,34 +128,36 @@ extension FunctionBuilder.ApplyNode {
 
 // MARK: -
 
-extension FunctionBuilder.MapNode {
+extension MapNode {
     
     // MARK: -
 
     /// Evaluates the map operator in given context.
     ///
     /// Throws an ``EvalError``.
-    func eval<T>(inContext context: Context<T>, with parameters: [Any]) throws -> Any {
-        guard let function = context[function: name], function.parameters.count == 1 else { throw EvalError.unknownFunction(name) }
-        guard let list = try listNode.eval(inContext: context, with: parameters) as? [Any] else { throw EvalError.invalidType }
-
-        return try list.map { try function.eval(inContext: context, with: [$0]) }
+    func eval(inContext context: Context, with parameters: [Value]) throws -> Value {
+        guard let function = context[function: name], function.parameterCount == 1 else { throw EvalError.unknownFunction(name) }
+        guard case let .list(list) = try listNode.eval(inContext: context, with: parameters) else { throw EvalError.invalidType }
+        
+        return try .list(list.map { try function.eval(inContext: context, with: [$0]) })
     }
     
 }
 
 
-extension FunctionBuilder.ReduceNode {
+// MARK: -
+
+extension ReduceNode {
     
     // MARK: -
 
-    /// Evaluates the map node in given context.
+    /// Evaluates the reduce operator in given context.
     ///
     /// Throws an ``EvalError``.
-    func eval<T>(inContext context: Context<T>, with parameters: [Any]) throws -> Any {
-        guard let function = context[function: name], function.parameters.count == 2 else { throw EvalError.unknownFunction(name) }
+    func eval(inContext context: Context, with parameters: [Value]) throws -> Value {
+        guard let function = context[function: name], function.parameterCount == 2 else { throw EvalError.unknownFunction(name) }
         let value = try initialResultNode.eval(inContext: context, with: parameters)
-        guard let list = try listNode.eval(inContext: context, with: parameters) as? [Any] else { throw EvalError.invalidType }
+        guard case let .list(list) = try listNode.eval(inContext: context, with: parameters) else { throw EvalError.invalidType }
 
         return try list.reduce(value) { try function.eval(inContext: context, with: [$0, $1]) }
     }

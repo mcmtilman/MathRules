@@ -6,33 +6,13 @@
 //  Licensed under Apache License v2.0.
 //
 
-import RealModule
-
-/**
-  Interface for a function-as-tree node.
- */
-protocol Node: AnyObject, CustomDebugStringConvertible {
-    
-    /// Answers the number of child nodes.
-    var childCount: Int { get }
-    
-    /// Evalutes the node in given context with given variables and returns the result..
-    ///
-    /// Throws ``EvalError``.
-    func eval<T>(inContext context: Context<T>, with parameters: [Any]) throws -> Any
-    
-}
-
-
-// MARK: -
-
 /**
  'RPN' instructions for building a user-defined function.
  */
 public enum Instruction {
     
-    /// Represents a literal.
-    case const(Any)
+    /// Represents a constant.
+    case const(Value)
     
     /// Represents a zero-based reference to a parameter during execution.
     case param(Int)
@@ -55,202 +35,226 @@ public enum Instruction {
 // MARK: -
 
 /**
- * Builds a custom function from a RPN-like stack of instructions.
+  Interface for a function-as-tree node.
  */
-public struct FunctionBuilder<R: Real> {
+protocol Node: AnyObject, CustomDebugStringConvertible {
+    
+    /// Answers the number of child nodes.
+    var childCount: Int { get }
+    
+    /// Evalutes the node in given context with given variables and returns the result..
+    ///
+    /// Throws ``EvalError``.
+    func eval(inContext context: Context, with parameters: [Value]) throws -> Value
+    
+}
+
+
+// MARK: -
+
+/**
+ Represents a constant.
+ */
+class ConstantNode: Node {
     
     // MARK: -
 
-    /**
-     Represents a constant.
-     */
-    class ConstantNode: Node {
-        
-        // MARK: -
+    /// The constant value.
+    let value: Value
+    
+    /// The number of child nodes.
+    let childCount = 0
+    
+    // MARK: -
 
-        /// The constant value.
-        let value: Any
-        
-        /// The number of child nodes.
-        let childCount = 0
-        
-        // MARK: -
-
-        /// Creates a constant node with given value.
-        init(value: Any) {
-            self.value = value
-        }
-
+    /// Creates a constant node with given value.
+    init(value: Value) {
+        self.value = value
     }
-    
-    // MARK: -
 
-    /**
-     Represents a reference to a parameter.
-     */
-    class ParameterNode: Node {
-         
-        // MARK: -
+}
 
-        /// Index in list of parameters.
-        let index: Int
-         
-        /// The number of child nodes.
-        let childCount = 0
-        
-        // MARK: -
+// MARK: -
 
-        /// Creates a parameter node with given index.
-        init(index: Int) {
-             self.index = index
-         }
-
-     }
+/**
+ Represents a reference to a parameter.
+ */
+class ParameterNode: Node {
      
     // MARK: -
 
-    /**
-    Represents an if-then-else expression.
-    */
-    class ConditionNode: Node {
-       
-       // MARK: -
+    /// Index in list of parameters.
+    let index: Int
+     
+    /// The number of child nodes.
+    let childCount = 0
+    
+    // MARK: -
 
-       /// Boolean expression, true branch and false branch.
-       let testNode, trueNode, falseNode: Node
-       
-       /// The number of child nodes.
-       var childCount: Int {
-           3
-       }
-       
-       // MARK: -
+    /// Creates a parameter node with given index.
+    init(index: Int) {
+         self.index = index
+     }
 
-       /// Creates a condition node with test, true branch and false branch.
-       ///
-       /// Throws an ``EvalError`` when there are less than three nodes on the stack,
-       init(stack: [Node]) throws {
-           guard stack.count >= 3 else { throw FunctionError.invalidInstructions}
-           
-           self.testNode = stack[stack.count - 3]
-           self.trueNode = stack[stack.count - 2]
-           self.falseNode = stack[stack.count - 1]
-       }
+ }
+ 
+// MARK: -
 
-    }
+/**
+Represents an if-then-else expression.
+*/
+class ConditionNode: Node {
    
+   // MARK: -
+
+   /// Boolean expression, true branch and false branch.
+   let testNode, trueNode, falseNode: Node
+   
+   /// The number of child nodes.
+   var childCount: Int {
+       3
+   }
+   
+   // MARK: -
+
+   /// Creates a condition node with test, true branch and false branch.
+   ///
+   /// Throws an ``EvalError`` when there are less than three nodes on the stack,
+   init(stack: [Node]) throws {
+       guard stack.count >= 3 else { throw FunctionError.invalidInstructions }
+       
+       self.testNode = stack[stack.count - 3]
+       self.trueNode = stack[stack.count - 2]
+       self.falseNode = stack[stack.count - 1]
+   }
+
+}
+
+// MARK: -
+
+/**
+ Represents a function call.
+ */
+class ApplyNode: Node {
+    
     // MARK: -
 
-    /**
-     Represents a function call.
-     */
-    class ApplyNode: Node {
-        
-        // MARK: -
+    /// Name of the unction to be called.
+    let name: String
+    
+    /// Parameters of the function call.
+    let parameterNodes: [Node]
+    
+    /// The number of child nodes.
+    var childCount: Int {
+        parameterNodes.count
+    }
+    
+    // MARK: -
 
-        /// Name of the unction to be called.
-        let name: String
+    /// Creates a functional call node with parameters on top of the stack.
+    init(name: String, library: Context.Library, stack: [Node]) throws {
+        guard let function = library[name] else { throw FunctionError.unknownFunction(name) }
+        guard stack.count >= function.parameterCount else { throw FunctionError.invalidInstructions }
         
-        /// Parameters of the function call.
-        let parameterNodes: [Node]
-        
-        /// The number of child nodes.
-        var childCount: Int {
-            parameterNodes.count
-        }
-        
-        // MARK: -
-
-        /// Creates a functional call node with parameters on top of the stack.
-        init(name: String, library: Context<R>.Library, stack: [Node]) throws {
-            guard let function = library[name] else { throw FunctionError.unknownFunction(name) }
-            guard stack.count >= function.parameters.count else { throw FunctionError.invalidInstructions}
-            
-            self.name = name
-            self.parameterNodes = Array(stack.suffix(function.parameters.count))
-        }
-
+        self.name = name
+        self.parameterNodes = Array(stack.suffix(function.parameterCount))
     }
 
+}
+
+// MARK: -
+
+/**
+ Represents the application of a function to a list of values.
+ */
+class MapNode: Node {
+    
+    // MARK: -
+
+    /// Name of the function to be called.
+    let name: String
+    
+    /// Node representing a list of values.
+    let listNode: Node
+    
+    /// The number of child nodes.
+    let childCount = 1
+    
+    // MARK: -
+
+    /// Creates a map node with list parameter on top of the stack.
+    init(name: String, library: Context.Library, stack: [Node]) throws {
+        guard let function = library[name],
+              function.parameterCount == 1 else { throw FunctionError.unknownFunction(name) }
+        guard let node = stack.last else { throw FunctionError.invalidInstructions }
+        
+        self.name = name
+        self.listNode = node
+    }
+
+}
+
+// MARK: -
+
+/**
+ Represents the application of a reduction function to a list of values.
+ */
+class ReduceNode: Node {
+    
+    // MARK: -
+
+    /// Name of the function to be called.
+    let name: String
+    
+    /// Node representing the initial result of the reduce operation.
+    let initialResultNode: Node
+    
+    /// Node representing a list of values.
+    let listNode: Node
+    
+    /// The number of child nodes.
+    let childCount = 2
+    
+    // MARK: -
+
+    /// Creates a reduce node with initial result and list parameter nodes on top of the stack.
+    init(name: String, library: Context.Library, stack: [Node]) throws {
+        guard let function = library[name], function.parameterCount == 2 else { throw FunctionError.unknownFunction(name) }
+
+        self.name = name
+        self.initialResultNode = stack[stack.count - 2]
+        self.listNode = stack[stack.count - 1]
+    }
+
+}
+
+
+// MARK: -
+
+/**
+ * Builds a custom function from a RPN-like stack of instructions.
+ */
+public struct FunctionBuilder {
+    
     // MARK: -
     
-    /**
-     Represents the application of a function to a list of values.
-     */
-    class MapNode: Node {
-        
-        // MARK: -
-
-        /// Name of the function to be called.
-        let name: String
-        
-        /// Node representing a list of values.
-        let listNode: Node
-        
-        /// The number of child nodes.
-        let childCount = 1
-        
-        // MARK: -
-
-        /// Creates a map node with list parameter on top of the stack.
-        init(name: String, library: Context<R>.Library, stack: [Node]) throws {
-            guard let function = library[name],
-                  function.parameters.count == 1 else { throw FunctionError.unknownFunction(name) }
-            guard let node = stack.last else { throw FunctionError.invalidInstructions }
-            
-            self.name = name
-            self.listNode = node
-        }
-
-    }
-
-    // MARK: -
-    
-    /**
-     Represents the application of a reduction function to a list of values.
-     */
-    class ReduceNode: Node {
-        
-        // MARK: -
-
-        /// Name of the function to be called.
-        let name: String
-        
-        /// Node representing the initial result of the reduce operation.
-        let initialResultNode: Node
-        
-        /// Node representing a list of values.
-        let listNode: Node
-        
-        /// The number of child nodes.
-        let childCount = 2
-        
-        // MARK: -
-
-        /// Creates a reduce node with initial result and list parameter nodes on top of the stack.
-        init(name: String, library: Context<R>.Library, stack: [Node]) throws {
-            guard let function = library[name], function.parameters.count == 2 else { throw FunctionError.unknownFunction(name) }
-
-            self.name = name
-            self.initialResultNode = stack[stack.count - 2]
-            self.listNode = stack[stack.count - 1]
-        }
-
-    }
+    /// Default initializer is internal.
+    public init() {}
     
     // MARK: -
     
     /// Creates a user-defined function with an expression wrapping a tree representation of given instructions.
-    public func buildFunction(name: String, instructions: [Instruction], library: Context<R>.Library) throws -> Function<R> {
+    public func buildFunction(name: String, instructions: [Instruction], library: Context.Library) throws -> Function {
         let node = try buildNode(name: name, instructions: instructions, library: library)
     
-        return Function<R>(name: name, type: try inferType(instructions), isPrimitive: false) { params, context in
+        return Function(name: name, type: try inferType(instructions), isPredefined: false) { params, context in
             try node.eval(inContext: context, with: params)
         }
     }
     
     /// Creates a tree representation of the instructions.
-    func buildNode(name: String, instructions: [Instruction], library: Context<R>.Library) throws -> Node {
+    func buildNode(name: String, instructions: [Instruction], library: Context.Library) throws -> Node {
         var stack = [Node]()
         
         for i in 0 ..< instructions.count {
@@ -267,7 +271,7 @@ public struct FunctionBuilder<R: Real> {
     // MARK: -
 
     // Returns a node depending on the type of instruction.
-    private func buildNode(_ instruction: Instruction, _ library: Context<R>.Library, _ stack: [Node]) throws -> Node {
+    private func buildNode(_ instruction: Instruction, _ library: Context.Library, _ stack: [Node]) throws -> Node {
         switch instruction {
         case let .const(value):
             return ConstantNode(value: value)
@@ -297,7 +301,7 @@ public struct FunctionBuilder<R: Real> {
         
         if let index = (indices.first { $0 < 0 || $0 >= indices.count }) { throw FunctionError.invalidParameterIndex(index) }
 
-        return ((0 ..< indices.count).map { ("param\($0)", R.self) }, R.self)
+        return ((0 ..< indices.count).map { ("param\($0)", Real.self) }, Real.self)
     }
     
 }
@@ -305,13 +309,22 @@ public struct FunctionBuilder<R: Real> {
 
 // MARK: - CustomDebugStringConvertible -
 
-extension FunctionBuilder.ConstantNode {
+extension Value: CustomDebugStringConvertible {
     
     // MARK: -
 
-    /// Debug description representing a constant.
-    var debugDescription: String {
-        "\(value)"
+    /// Debug description representing a value.
+    public var debugDescription: String {
+        switch self {
+        case let .int(i):
+            return "\(i)"
+        case let .real(r):
+            return "\(r)"
+        case let .list(l):
+            return "\(l.map { $0 as Any })"
+        case let .bool(b):
+            return b.description
+        }
     }
     
 }
@@ -319,7 +332,21 @@ extension FunctionBuilder.ConstantNode {
 
 // MARK: -
 
-extension FunctionBuilder.ParameterNode {
+extension ConstantNode {
+    
+    // MARK: -
+
+    /// Debug description representing a constant.
+    var debugDescription: String {
+        "\(value.debugDescription)"
+    }
+    
+}
+
+
+// MARK: -
+
+extension ParameterNode {
     
     // MARK: -
 
@@ -333,7 +360,7 @@ extension FunctionBuilder.ParameterNode {
 
 // MARK: -
 
-extension FunctionBuilder.ConditionNode {
+extension ConditionNode {
     
     // MARK: -
 
@@ -347,7 +374,7 @@ extension FunctionBuilder.ConditionNode {
 
 // MARK: -
 
-extension FunctionBuilder.ApplyNode {
+extension ApplyNode {
     
     // MARK: -
 
@@ -363,7 +390,7 @@ extension FunctionBuilder.ApplyNode {
 
 // MARK: -
 
-extension FunctionBuilder.MapNode {
+extension MapNode {
     
     // MARK: -
 
@@ -377,7 +404,7 @@ extension FunctionBuilder.MapNode {
 
 // MARK: -
 
-extension FunctionBuilder.ReduceNode {
+extension ReduceNode {
     
     // MARK: -
 

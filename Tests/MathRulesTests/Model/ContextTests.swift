@@ -7,7 +7,12 @@
 //
 
 import XCTest
-@testable import MathRules
+
+#if DEBUG
+    @testable import MathRules
+#else
+    import MathRules
+#endif
 
 /**
  Tests contexts.
@@ -25,9 +30,11 @@ class ContextTests: XCTestCase {
         )
         for (name, function) in library.functions {
             XCTAssertEqual(name, function.name)
-            XCTAssertTrue(function.isPrimitive)
+            XCTAssertTrue(function.isPredefined)
         }
     }
+
+#if DEBUG
     
     func testAccessDefaultLibrary() throws {
         let library = try XCTUnwrap(Library())
@@ -37,9 +44,11 @@ class ContextTests: XCTestCase {
         }
     }
     
+#endif
+
     func testValidRegistration() throws {
         let library = try XCTUnwrap(Library())
-        let zork = Function(name: "Zork", type: ([("param", Double.self)], Double.self), isPrimitive: false) { _, _ in 0 }
+        let zork = Function(name: "Zork", type: ([("param", Real.self)], Double.self), isPredefined: false) { _, _ in .real(0) }
         
         XCTAssertNil(library["Zork"])
         XCTAssertNoThrow(try library.register(function: zork))
@@ -48,7 +57,7 @@ class ContextTests: XCTestCase {
     
     func testInvalidDuplicateRegistration() throws {
         let library = try XCTUnwrap(Library())
-        let plus = Function(name: "+", type: ([], Double.self)) { _, _ in 0 }
+        let plus = Function(name: "+", type: ([], Real.self)) { _, _ in .real(0) }
         
         XCTAssertNotNil(library["+"])
         XCTAssertThrowsError(try library.register(function: plus)) { error in
@@ -59,20 +68,22 @@ class ContextTests: XCTestCase {
     
     func testValidDuplicateRegistration() throws {
         let library = try XCTUnwrap(Library())
-        let zork1 = Function(name: "Zork", type: ([("param1", Double.self)], Double.self), isPrimitive: false) { _, _ in 0 }
-        let zork2 = Function(name: "Zork", type: ([("param2", Double.self)], Double.self), isPrimitive: false) { _, _ in 0 }
+        let zork1 = Function(name: "Zork", type: ([("param1", Real.self)], Double.self), isPredefined: false) { _, _ in .real(0) }
+        let zork2 = Function(name: "Zork", type: ([("param2", Real.self)], Double.self), isPredefined: false) { _, _ in .real(0) }
 
         XCTAssertNil(library["Zork"])
         XCTAssertNoThrow(try library.register(function: zork1))
         let function1 = try XCTUnwrap(library["Zork"])
-        XCTAssertEqual(function1.parameters[0].0, "param1")
+        XCTAssertEqual(function1.type.0[0].0, "param1")
         XCTAssertNoThrow(try library.register(function: zork2))
         let function2 = try XCTUnwrap(library["Zork"])
-        XCTAssertEqual(function2.parameters[0].0, "param2")
+        XCTAssertEqual(function2.type.0[0].0, "param2")
     }
     
     // MARK: Accessing context tests
     
+#if DEBUG
+
     func testAccessDefaultLibraryContext() throws {
         let library = try XCTUnwrap(Library())
         let context = Context(library: library)
@@ -81,6 +92,8 @@ class ContextTests: XCTestCase {
             XCTAssertNotNil(context[function: function.name])
         }
     }
+
+#endif
     
 }
 
@@ -88,8 +101,6 @@ class ContextTests: XCTestCase {
 extension ContextTests {
     
     // Shortcuts for MathRules types.
-    typealias Context = MathRules.Context<Double>
     typealias Library = Context.Library
-    typealias Function = MathRules.Function<Double>
     
 }

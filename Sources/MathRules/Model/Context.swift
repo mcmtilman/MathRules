@@ -12,7 +12,7 @@ import RealModule
  Evaluation context for functions.
  Contains library of standard and user-defined functions.
  */
-public struct Context<R: Real> {
+public struct Context {
     
     // MARK: -
 
@@ -22,32 +22,32 @@ public struct Context<R: Real> {
         // MARK: -
 
         /// Maps function names to functions.
-        public private (set) var functions = [String: Function<R>]()
+        public private (set) var functions = [String: Function]()
         
         // MARK: -
         
         /// Creates a library with given primitive functions.
         /// Fails if there are duplicate function names.
         public init?() {
-            for function in Function<R>.primitiveFunctions() {
+            for function in Function.primitiveFunctions() {
                 guard functions.updateValue(function, forKey: function.name) == nil else { return nil }
             }
         }
 
         // MARK: -
 
-        /// Answers the function with given name or nil if none found.
-        subscript(name: String) -> Function<R>? {
-            functions[name]
-        }
-        
         /// Registers given function. Fails if its name overrides a predefined function.
-       func register(function: Function<R>) throws {
-            if let function = functions[function.name], function.isPrimitive {
+       public func register(function: Function) throws {
+            if let function = functions[function.name], function.isPredefined {
                 throw FunctionError.duplicateFunction(function.name)
             } else {
                 functions[function.name] = function
             }
+        }
+        
+        /// Answers the function with given name or nil if none found.
+        public subscript(name: String) -> Function? {
+            functions[name]
         }
         
     }
@@ -67,7 +67,7 @@ public struct Context<R: Real> {
     // MARK: -
 
     // Answers the function with given name or nil if none found.
-    subscript(function name: String) -> Function<R>? {
+    subscript(function name: String) -> Function? {
         library[name]
     }
     
