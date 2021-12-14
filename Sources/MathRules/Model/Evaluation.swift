@@ -6,26 +6,6 @@
 //  Licensed under Apache License v2.0.
 //
 
-/**
- Constant value.
- */
-public enum Value: Equatable {
-    
-    /// Boolean value.
-    case bool(Bool)
-
-    /// Integer value.
-    case int(Int)
-
-    /// Real value.
-    case real(Real)
-
-    /// List of Int.
-    indirect case list([Value])
-    
-}
-
-
 // MARK: - Evaluating -
 
 public extension Function {

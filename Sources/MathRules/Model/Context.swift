@@ -6,8 +6,6 @@
 //  Licensed under Apache License v2.0.
 //
 
-import RealModule
-
 /**
  Evaluation context for functions.
  Contains library of standard and user-defined functions.

@@ -21,7 +21,7 @@ class FunctionTests: XCTestCase {
         let context = Context(library: library)
         let function = try XCTUnwrap(library["+"])
 
-        XCTAssertEqual(try function.eval(inContext: context, with: params([3, 4])), .real(7))
+        XCTAssertEqual(try function.eval(inContext: context, with: params(3, 4)), .real(7))
     }
 
     func testSubtraction() throws {
@@ -29,7 +29,7 @@ class FunctionTests: XCTestCase {
         let context = Context(library: library)
         let function = try XCTUnwrap(library["-"])
 
-        XCTAssertEqual(try function.eval(inContext: context, with: params([3, 4])), .real(-1))
+        XCTAssertEqual(try function.eval(inContext: context, with: params(3, 4)), .real(-1))
     }
 
     func testMultiplication() throws {
@@ -37,7 +37,7 @@ class FunctionTests: XCTestCase {
         let context = Context(library: library)
         let function = try XCTUnwrap(library["*"])
 
-        XCTAssertEqual(try function.eval(inContext: context, with: params([3, 4])), .real(12))
+        XCTAssertEqual(try function.eval(inContext: context, with: params(3, 4)), .real(12))
     }
 
     func testDivision() throws {
@@ -45,7 +45,7 @@ class FunctionTests: XCTestCase {
         let context = Context(library: library)
         let function = try XCTUnwrap(library["/"])
 
-        XCTAssertEqual(try function.eval(inContext: context, with: params([3, 4])), .real(0.75))
+        XCTAssertEqual(try function.eval(inContext: context, with: params(3, 4)), .real(0.75))
     }
 
     func testSquare() throws {
@@ -53,7 +53,7 @@ class FunctionTests: XCTestCase {
         let context = Context(library: library)
         let function = try XCTUnwrap(library["sqr"])
 
-        XCTAssertEqual(try function.eval(inContext: context, with: params([3])), .real(9))
+        XCTAssertEqual(try function.eval(inContext: context, with: params(3)), .real(9))
     }
 
     func testSquareRoot() throws {
@@ -61,7 +61,7 @@ class FunctionTests: XCTestCase {
         let context = Context(library: library)
         let function = try XCTUnwrap(library["sqrt"])
 
-        XCTAssertEqual(try function.eval(inContext: context, with: [.int(9)]), .real(3))
+        XCTAssertEqual(try function.eval(inContext: context, with: params(9)), .real(3))
     }
 
     // MARK: Boolean function tests
@@ -71,9 +71,9 @@ class FunctionTests: XCTestCase {
         let context = Context(library: library)
         let function = try XCTUnwrap(library["<="])
 
-        XCTAssertEqual(try function.eval(inContext: context, with: params([3, 4])), .bool(true))
-        XCTAssertEqual(try function.eval(inContext: context, with: params([4, 4])), .bool(true))
-        XCTAssertEqual(try function.eval(inContext: context, with: params([4, 3])), .bool(false))
+        XCTAssertEqual(try function.eval(inContext: context, with: params(3, 4)), .bool(true))
+        XCTAssertEqual(try function.eval(inContext: context, with: params(4, 4)), .bool(true))
+        XCTAssertEqual(try function.eval(inContext: context, with: params(4, 3)), .bool(false))
     }
 
     func testEqualTo() throws {
@@ -81,9 +81,9 @@ class FunctionTests: XCTestCase {
         let context = Context(library: library)
         let function = try XCTUnwrap(library["=="])
 
-        XCTAssertEqual(try function.eval(inContext: context, with: params([4, 4])), .bool(true))
-        XCTAssertEqual(try function.eval(inContext: context, with: params([3, 4])), .bool(false))
-        XCTAssertEqual(try function.eval(inContext: context, with: params([4, 3])), .bool(false))
+        XCTAssertEqual(try function.eval(inContext: context, with: params(4, 4)), .bool(true))
+        XCTAssertEqual(try function.eval(inContext: context, with: params(3, 4)), .bool(false))
+        XCTAssertEqual(try function.eval(inContext: context, with: params(4, 3)), .bool(false))
     }
 
     func testGreaterThanOrEqualTo() throws {
@@ -91,9 +91,9 @@ class FunctionTests: XCTestCase {
         let context = Context(library: library)
         let function = try XCTUnwrap(library[">="])
 
-        XCTAssertEqual(try function.eval(inContext: context, with: params([4, 3])), .bool(true))
-        XCTAssertEqual(try function.eval(inContext: context, with: params([4, 4])), .bool(true))
-        XCTAssertEqual(try function.eval(inContext: context, with: params([3, 4])), .bool(false))
+        XCTAssertEqual(try function.eval(inContext: context, with: params(4, 3)), .bool(true))
+        XCTAssertEqual(try function.eval(inContext: context, with: params(4, 4)), .bool(true))
+        XCTAssertEqual(try function.eval(inContext: context, with: params(3, 4)), .bool(false))
     }
 
     // MARK: Invalid parameter tests
@@ -106,7 +106,7 @@ class FunctionTests: XCTestCase {
         for name in names {
             let function = try XCTUnwrap(library[name])
 
-            for params in ([[], [3, 4]].map(params)) {
+            for params in [[], [3, 4]].map(params) {
                 XCTAssertThrowsError(try function.eval(inContext: context, with: params)) { error in
                     XCTAssertEqual(error as? EvalError, .invalidParameters)
                 }
@@ -122,7 +122,7 @@ class FunctionTests: XCTestCase {
         for name in names {
             let function = try XCTUnwrap(library[name])
 
-            for params in ([[], [3], [3, 4, 5]].map(params)) {
+            for params in [[], [3], [3, 4, 5]].map(params) {
                 XCTAssertThrowsError(try function.eval(inContext: context, with: params)) { error in
                     XCTAssertEqual(error as? EvalError, .invalidParameters)
                 }
@@ -135,7 +135,12 @@ class FunctionTests: XCTestCase {
 
 extension FunctionTests {
     
-    // Utility function
+    // Utility functions.
+    
+    func params(_ elements: Int...) -> [Value] {
+        params(elements)
+    }
+
     func params(_ list: [Int]) -> [Value] {
         list.map(Value.int)
     }

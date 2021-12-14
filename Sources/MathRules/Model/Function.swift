@@ -15,6 +15,28 @@ public typealias Real = Double
 // MARK: -
 
 /**
+ Constant value.
+ */
+public enum Value: Equatable {
+    
+    /// Boolean value.
+    case bool(Bool)
+
+    /// Integer value.
+    case int(Int)
+
+    /// Real value.
+    case real(Real)
+
+    /// List of Int.
+    indirect case list([Value])
+    
+}
+
+
+// MARK: -
+
+/**
  Represents a primitive or a user-defined function.
  The implementation is encapsulated in a closure.
  */
@@ -53,6 +75,7 @@ public struct Function {
     }
 
 }
+
 
 // MARK: - Primitive functions -
 
