@@ -118,8 +118,10 @@ extension MapNode {
     func eval(inContext context: Context, with parameters: [Value]) throws -> Value {
         guard let function = context[function: name], function.parameterCount == 1 else { throw EvalError.unknownFunction(name) }
         guard case let .list(list) = try listNode.eval(inContext: context, with: parameters) else { throw EvalError.invalidType }
+        var params = [Value.int(0)]
         
-        return try .list(list.map { try function.eval(inContext: context, with: [$0]) })
+        return try .list(list.map { params[0] = $0
+            return try function.eval(inContext: context, with: params) })
     }
     
 }
@@ -138,8 +140,10 @@ extension ReduceNode {
         guard let function = context[function: name], function.parameterCount == 2 else { throw EvalError.unknownFunction(name) }
         let value = try initialResultNode.eval(inContext: context, with: parameters)
         guard case let .list(list) = try listNode.eval(inContext: context, with: parameters) else { throw EvalError.invalidType }
-
-        return try list.reduce(value) { try function.eval(inContext: context, with: [$0, $1]) }
+        var params = [Value.int(0), .int(0)]
+        
+        return try list.reduce(value) { params[0] = $0; params[1] = $1
+            return try function.eval(inContext: context, with: params) }
     }
 
 }
