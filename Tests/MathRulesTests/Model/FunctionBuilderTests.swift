@@ -99,38 +99,38 @@ class FunctionBuilderTests: XCTestCase {
         XCTAssertEqual(try function.eval(inContext: context, with: []), .real(9))
     }
     
-    func testParameterizedPown() throws {
+    func testParameterizedExponent() throws {
         let library = try XCTUnwrap(Library())
         let context = Context(library: library)
         let builder = FunctionBuilder()
-        let function = try builder.buildFunction(name: "Function", instructions: [.param(0), .param(1), .apply("pown")], library: library)
-         
-        XCTAssertEqual(try function.eval(inContext: context, with: params(3, 2)), .real(9))
-     }
-     
-    func testFixedPown() throws {
-        let library = try XCTUnwrap(Library())
-        let context = Context(library: library)
-        let builder = FunctionBuilder()
-        let function = try builder.buildFunction(name: "Function", instructions: [.const(.int(4)), .const(.real(0.5)), .apply("pow")], library: library)
-        
-        XCTAssertEqual(try function.eval(inContext: context, with: []), .real(2))
-    }
-    
-    func testParameterizedPow() throws {
-        let library = try XCTUnwrap(Library())
-        let context = Context(library: library)
-        let builder = FunctionBuilder()
-        let function = try builder.buildFunction(name: "Function", instructions: [.param(0), .param(1), .apply("pow")], library: library)
+        let function = try builder.buildFunction(name: "Function", instructions: [.param(0), .param(1), .apply("exp")], library: library)
          
         XCTAssertEqual(try function.eval(inContext: context, with: params(4.0, 0.5)), .real(2))
      }
      
-    func testFixedPow() throws {
+    func testFixedExponent() throws {
         let library = try XCTUnwrap(Library())
         let context = Context(library: library)
         let builder = FunctionBuilder()
-        let function = try builder.buildFunction(name: "Function", instructions: [.const(.int(3)), .const(.int(2)), .apply("pown")], library: library)
+        let function = try builder.buildFunction(name: "Function", instructions: [.const(.int(4)), .const(.real(0.5)), .apply("exp")], library: library)
+        
+        XCTAssertEqual(try function.eval(inContext: context, with: []), .real(2))
+    }
+    
+    func testParameterizedPower() throws {
+        let library = try XCTUnwrap(Library())
+        let context = Context(library: library)
+        let builder = FunctionBuilder()
+        let function = try builder.buildFunction(name: "Function", instructions: [.param(0), .param(1), .apply("power")], library: library)
+         
+        XCTAssertEqual(try function.eval(inContext: context, with: params(3, 2)), .real(9))
+     }
+     
+    func testFixedPower() throws {
+        let library = try XCTUnwrap(Library())
+        let context = Context(library: library)
+        let builder = FunctionBuilder()
+        let function = try builder.buildFunction(name: "Function", instructions: [.const(.int(3)), .const(.int(2)), .apply("power")], library: library)
         
         XCTAssertEqual(try function.eval(inContext: context, with: []), .real(9))
     }

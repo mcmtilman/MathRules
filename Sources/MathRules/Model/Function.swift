@@ -104,24 +104,24 @@ extension Function {
     
     static func powerFunctions() -> [Function] {
         [
+            Function(name: "exp", type: ([("x", Real.self), ("y", Real.self)], Real.self)) { params, _ in
+                try .real(Real.pow(real(params[0]), real(params[1])))
+            },
+            Function(name: "power", type: ([("x", Real.self), ("n", Int.self)], Real.self)) { params, _ in
+                try .real(Real.pow(real(params[0]), int(params[1])))
+            },
             Function(name: "sqr", type: ([("x", Real.self)], Real.self)) { params, _ in
                 let value = try real(params[0])
                 
                 return .real(value * value)
             },
-            Function(name: "pow", type: ([("x", Real.self), ("y", Real.self)], Real.self)) { params, _ in
-                try .real(Real.pow(real(params[0]), real(params[1])))
-            },
-            Function(name: "pown", type: ([("x", Real.self), ("n", Int.self)], Real.self)) { params, _ in
-                try .real(Real.pow(real(params[0]), int(params[1])))
-            },
-           Function(name: "sqrt", type: ([("x", Real.self)], Real.self)) { params, _ in
-                try .real(real(params[0]).squareRoot())
-            },
             Function(name: "root", type: ([("x", Real.self), ("n", Int.self)], Real.self)) { params, _ in
                 try .real(Real.root(real(params[0]), int(params[1])))
             },
-       ]
+            Function(name: "sqrt", type: ([("x", Real.self)], Real.self)) { params, _ in
+                 try .real(real(params[0]).squareRoot())
+            },
+      ]
     }
     
     /// Returns a list of primitive boolean functions.

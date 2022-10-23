@@ -63,18 +63,18 @@ class FunctionTests: XCTestCase {
         XCTAssertEqual(try function.eval(inContext: context, with: params(9)), .real(3))
     }
 
-    func testPow() throws {
+    func testExponent() throws {
         let library = try XCTUnwrap(Library())
         let context = Context(library: library)
-        let function = try XCTUnwrap(library["pow"])
+        let function = try XCTUnwrap(library["exp"])
 
         XCTAssertEqual(try function.eval(inContext: context, with: params(4, 0.5)), .real(2))
     }
 
-    func testPown() throws {
+    func testPower() throws {
         let library = try XCTUnwrap(Library())
         let context = Context(library: library)
-        let function = try XCTUnwrap(library["pown"])
+        let function = try XCTUnwrap(library["power"])
 
         XCTAssertEqual(try function.eval(inContext: context, with: params(3, 2)), .real(9))
     }
@@ -140,7 +140,7 @@ class FunctionTests: XCTestCase {
     func testBinaryFunctionInvalidParameterCount() throws {
         let library = try XCTUnwrap(Library())
         let context = Context(library: library)
-        let names = ["+", "-", "*", "/", "<=", "==", ">="]
+        let names = ["+", "-", "*", "/", "<=", "==", ">=", "exp", "power", "root"]
 
         for name in names {
             let function = try XCTUnwrap(library[name])
