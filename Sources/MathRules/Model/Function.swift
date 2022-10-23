@@ -1,10 +1,11 @@
 //
 //  Function.swift
 //  
-//  Created by Michel Tilman on 08/12/2021.
-//  Copyright © 2021 Dotted.Pair.
+//  Copyright © 2021 by Michel Tilman.
 //  Licensed under Apache License v2.0.
 //
+
+import RealModule
 
 /**
  Represents a primitive or a user-defined function.
@@ -97,16 +98,30 @@ extension Function {
             },
             Function(name: "/", type: ([("lhs", Real.self), ("rhs", Real.self)], Real.self)) { params, _ in
                 try .real(real(params[0]) / real(params[1]))
-            },
-            Function(name: "sqr", type: ([("value", Real.self)], Real.self)) { params, _ in
+            }
+        ]
+    }
+    
+    static func powerFunctions() -> [Function] {
+        [
+            Function(name: "sqr", type: ([("x", Real.self)], Real.self)) { params, _ in
                 let value = try real(params[0])
                 
                 return .real(value * value)
             },
-            Function(name: "sqrt", type: ([("value", Real.self)], Real.self)) { params, _ in
+            Function(name: "pow", type: ([("x", Real.self), ("y", Real.self)], Real.self)) { params, _ in
+                try .real(Real.pow(real(params[0]), real(params[1])))
+            },
+            Function(name: "pown", type: ([("x", Real.self), ("n", Int.self)], Real.self)) { params, _ in
+                try .real(Real.pow(real(params[0]), int(params[1])))
+            },
+           Function(name: "sqrt", type: ([("x", Real.self)], Real.self)) { params, _ in
                 try .real(real(params[0]).squareRoot())
             },
-        ]
+            Function(name: "root", type: ([("x", Real.self), ("n", Int.self)], Real.self)) { params, _ in
+                try .real(Real.root(real(params[0]), int(params[1])))
+            },
+       ]
     }
     
     /// Returns a list of primitive boolean functions.
@@ -126,7 +141,7 @@ extension Function {
 
     /// Returns a list of all primitive functions.
     static func primitiveFunctions() -> [Function] {
-        arithmeticFunctions() + booleanFunctions()
+        arithmeticFunctions() + powerFunctions() + booleanFunctions()
     }
 
     // MARK: -
@@ -139,6 +154,17 @@ extension Function {
             return v
         case let .int(i):
             return Real(i)
+        default:
+            throw EvalError.invalidType
+        }
+    }
+    
+    // Casts given value into a Int.
+    // Throws an ``EvalError`` if not possible.
+    private static func int(_ value: Value) throws -> Int {
+        switch value {
+        case let .int(i):
+            return i
         default:
             throw EvalError.invalidType
         }

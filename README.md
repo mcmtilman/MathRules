@@ -24,7 +24,7 @@ MathRules depends on the *swift-numerics* package.
 
 ## Compatibility
 
-MathRules was tested on macOS Big Sur 11.6.1 with XCode 13.1.
+MathRules was tested on macOS Monterey with XCode 13.4.1.
 
 ## Status
 

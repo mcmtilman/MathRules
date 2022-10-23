@@ -1,8 +1,7 @@
 //
 //  FunctionBuilderTests.swift
 //  
-//  Created by Michel Tilman on 10/12/2021.
-//  Copyright © 2021 Dotted.Pair.
+//  Copyright © 2021 Michel Tilman .
 //  Licensed under Apache License v2.0.
 //
 
@@ -82,13 +81,13 @@ class FunctionBuilderTests: XCTestCase {
         XCTAssertEqual(try function.eval(inContext: context, with: params(4)), .int(4))
     }
     
-   func testParameterizedSquare() throws {
+    func testParameterizedSquare() throws {
         let library = try XCTUnwrap(Library())
         let context = Context(library: library)
         let builder = FunctionBuilder()
         let function = try builder.buildFunction(name: "Function", instructions: [.param(0), .apply("sqr")], library: library)
-        
-       XCTAssertEqual(try function.eval(inContext: context, with: params(3)), .real(9))
+
+        XCTAssertEqual(try function.eval(inContext: context, with: params(3)), .real(9))
     }
     
     func testFixedSquare() throws {
@@ -98,6 +97,51 @@ class FunctionBuilderTests: XCTestCase {
         let function = try builder.buildFunction(name: "Function", instructions: [.const(.int(3)), .apply("sqr")], library: library)
         
         XCTAssertEqual(try function.eval(inContext: context, with: []), .real(9))
+    }
+    
+    func testParameterizedPown() throws {
+        let library = try XCTUnwrap(Library())
+        let context = Context(library: library)
+        let builder = FunctionBuilder()
+        let function = try builder.buildFunction(name: "Function", instructions: [.param(0), .param(1), .apply("pown")], library: library)
+         
+        XCTAssertEqual(try function.eval(inContext: context, with: params(3, 2)), .real(9))
+     }
+     
+    func testFixedPown() throws {
+        let library = try XCTUnwrap(Library())
+        let context = Context(library: library)
+        let builder = FunctionBuilder()
+        let function = try builder.buildFunction(name: "Function", instructions: [.const(.int(4)), .const(.real(0.5)), .apply("pow")], library: library)
+        
+        XCTAssertEqual(try function.eval(inContext: context, with: []), .real(2))
+    }
+    
+    func testParameterizedPow() throws {
+        let library = try XCTUnwrap(Library())
+        let context = Context(library: library)
+        let builder = FunctionBuilder()
+        let function = try builder.buildFunction(name: "Function", instructions: [.param(0), .param(1), .apply("pow")], library: library)
+         
+        XCTAssertEqual(try function.eval(inContext: context, with: params(4.0, 0.5)), .real(2))
+     }
+     
+    func testFixedPow() throws {
+        let library = try XCTUnwrap(Library())
+        let context = Context(library: library)
+        let builder = FunctionBuilder()
+        let function = try builder.buildFunction(name: "Function", instructions: [.const(.int(3)), .const(.int(2)), .apply("pown")], library: library)
+        
+        XCTAssertEqual(try function.eval(inContext: context, with: []), .real(9))
+    }
+    
+    func testRoot() throws {
+        let library = try XCTUnwrap(Library())
+        let context = Context(library: library)
+        let builder = FunctionBuilder()
+        let function = try builder.buildFunction(name: "Function", instructions: [.const(.int(9)), .const(.int(2)), .apply("root")], library: library)
+        
+        XCTAssertEqual(try function.eval(inContext: context, with: []), .real(3))
     }
     
     func testHypotenuse() throws {
@@ -184,6 +228,17 @@ class FunctionBuilderTests: XCTestCase {
         XCTAssertEqual(try function.eval(inContext: context, with: [list(1, 2, 3, 4, 5)]), list(1.0, 4.0, 9.0, 16.0, 25.0))
     }
     
+    func testMapMany() throws {
+        let library = try XCTUnwrap(Library())
+        let context = Context(library: library)
+        let builder = FunctionBuilder()
+        let function = try builder.buildFunction(name: "Function", instructions: [.param(0), .map("sqr")], library: library)
+
+        for _ in 1...10000 {
+            _ = try function.eval(inContext: context, with: [list(1, 2, 3, 4, 5)])
+        }
+    }
+    
     func testMapTwice() throws {
         let library = try XCTUnwrap(Library())
         let context = Context(library: library)
@@ -227,6 +282,17 @@ class FunctionBuilderTests: XCTestCase {
         let function = try builder.buildFunction(name: "Function", instructions: [.const(.int(0)), .param(0), .reduce("+")], library: library)
         
         XCTAssertEqual(try function.eval(inContext: context, with: [list(1...100)]), .real(5050))
+    }
+    
+    func testReduceMany() throws {
+        let library = try XCTUnwrap(Library())
+        let context = Context(library: library)
+        let builder = FunctionBuilder()
+        let function = try builder.buildFunction(name: "Function", instructions: [.const(.int(0)), .param(0), .reduce("+")], library: library)
+        
+        for _ in 1...10000 {
+            _ = try function.eval(inContext: context, with: [list(1...100)])
+        }
     }
     
     func testMapReduce() throws {
@@ -310,6 +376,10 @@ extension FunctionBuilderTests {
         elements.map(Value.int)
     }
 
+    func params(_ elements: Double...) -> [Value] {
+        elements.map(Value.real)
+    }
+    
     func list(_ elements: Int...) -> Value {
         list(elements)
     }

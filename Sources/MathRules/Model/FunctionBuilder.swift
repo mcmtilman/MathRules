@@ -1,8 +1,7 @@
 //
 //  FunctionBuilder.swift
 //  
-//  Created by Michel Tilman on 10/12/2021.
-//  Copyright © 2021 Dotted.Pair.
+//  Copyright © 2021 by Michel Tilman.
 //  Licensed under Apache License v2.0.
 //
 

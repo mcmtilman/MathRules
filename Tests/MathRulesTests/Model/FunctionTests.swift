@@ -1,8 +1,7 @@
 //
 //  FunctionTests.swift
 //  
-//  Created by Michel Tilman on 10/12/2021.
-//  Copyright © 2021 Dotted.Pair.
+//  Copyright © 2021 Michel Tilman .
 //  Licensed under Apache License v2.0.
 //
 
@@ -62,6 +61,30 @@ class FunctionTests: XCTestCase {
         let function = try XCTUnwrap(library["sqrt"])
 
         XCTAssertEqual(try function.eval(inContext: context, with: params(9)), .real(3))
+    }
+
+    func testPow() throws {
+        let library = try XCTUnwrap(Library())
+        let context = Context(library: library)
+        let function = try XCTUnwrap(library["pow"])
+
+        XCTAssertEqual(try function.eval(inContext: context, with: params(4, 0.5)), .real(2))
+    }
+
+    func testPown() throws {
+        let library = try XCTUnwrap(Library())
+        let context = Context(library: library)
+        let function = try XCTUnwrap(library["pown"])
+
+        XCTAssertEqual(try function.eval(inContext: context, with: params(3, 2)), .real(9))
+    }
+
+    func testRoot() throws {
+        let library = try XCTUnwrap(Library())
+        let context = Context(library: library)
+        let function = try XCTUnwrap(library["root"])
+
+        XCTAssertEqual(try function.eval(inContext: context, with: params(9, 2)), .real(3))
     }
 
     // MARK: Boolean function tests
@@ -143,6 +166,14 @@ extension FunctionTests {
 
     func params(_ list: [Int]) -> [Value] {
         list.map(Value.int)
+    }
+    
+    func params(_ elements: Double...) -> [Value] {
+        params(elements)
+    }
+    
+    func params(_ list: [Double]) -> [Value] {
+        list.map(Value.real)
     }
     
     // Shortcuts for MathRules types.

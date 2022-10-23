@@ -1,8 +1,7 @@
 //
 //  ContextTests.swift
 //  
-//  Created by Michel Tilman on 10/12/2021.
-//  Copyright © 2021 Dotted.Pair.
+//  Copyright © 2021 by Michel Tilman.
 //  Licensed under Apache License v2.0.
 //
 
@@ -23,14 +22,14 @@ class ContextTests: XCTestCase {
     
     func testDefaultLibrary() throws {
         let library = try XCTUnwrap(Library())
-        let expected = 9
+        let expected = 12
         
         XCTAssertEqual(library.functions.count, expected)
-        XCTAssertEqual(Set(library.functions.values.map(\.name)).count, expected
-        )
-        for (name, function) in library.functions {
-            XCTAssertEqual(name, function.name)
-            XCTAssertTrue(function.isPredefined)
+        for (name, overloadedFunctions) in library.functions {
+            for function in overloadedFunctions {
+                XCTAssertEqual(name, function.name)
+                XCTAssertTrue(function.isPredefined)
+            }
         }
     }
 
@@ -57,7 +56,7 @@ class ContextTests: XCTestCase {
     
     func testInvalidDuplicateRegistration() throws {
         let library = try XCTUnwrap(Library())
-        let plus = Function(name: "+", type: ([], Real.self)) { _, _ in .real(0) }
+        let plus = Function(name: "+", type: ([("lhs", Real.self), ("rhs", Real.self)], Real.self)) { _, _ in .real(0) }
         
         XCTAssertNotNil(library["+"])
         XCTAssertThrowsError(try library.register(function: plus)) { error in
