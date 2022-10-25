@@ -22,7 +22,7 @@ class ContextTests: XCTestCase {
     
     func testDefaultLibrary() throws {
         let library = try XCTUnwrap(Library())
-        let expected = 12
+        let expected = 16
         
         XCTAssertEqual(library.functions.count, expected)
         for (name, overloadedFunctions) in library.functions {

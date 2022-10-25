@@ -84,6 +84,15 @@ extension Function {
     
     // MARK: -
 
+    /// Returns a list of constant functions.
+    static func constantFunctions() -> [Function] {
+        [
+            Function(name: "pi", type: ([], Real.self)) { params, _ in
+                .real(Real.pi)
+            }
+        ]
+    }
+    
     /// Returns a list of primitive arithmetic functions.
     static func arithmeticFunctions() -> [Function] {
         [
@@ -102,12 +111,13 @@ extension Function {
         ]
     }
     
+    /// Returns a list of power functions.
     static func powerFunctions() -> [Function] {
         [
-            Function(name: "exp", type: ([("x", Real.self), ("y", Real.self)], Real.self)) { params, _ in
+            Function(name: "power", type: ([("x", Real.self), ("y", Real.self)], Real.self)) { params, _ in
                 try .real(Real.pow(real(params[0]), real(params[1])))
             },
-            Function(name: "power", type: ([("x", Real.self), ("n", Int.self)], Real.self)) { params, _ in
+            Function(name: "powern", type: ([("x", Real.self), ("n", Int.self)], Real.self)) { params, _ in
                 try .real(Real.pow(real(params[0]), int(params[1])))
             },
             Function(name: "sqr", type: ([("x", Real.self)], Real.self)) { params, _ in
@@ -120,11 +130,26 @@ extension Function {
             },
             Function(name: "sqrt", type: ([("x", Real.self)], Real.self)) { params, _ in
                  try .real(real(params[0]).squareRoot())
-            },
+            }
       ]
     }
     
-    /// Returns a list of primitive boolean functions.
+    /// Returns a list of exponential functions.
+    static func exponentialFunctions() -> [Function] {
+        [
+            Function(name: "exp", type: ([("x", Real.self)], Real.self)) { params, _ in
+                try .real(Real.exp(real(params[0])))
+            },
+            Function(name: "exp2", type: ([("x", Real.self)], Real.self)) { params, _ in
+                try .real(Real.exp2(real(params[0])))
+            },
+            Function(name: "exp10", type: ([("x", Real.self)], Real.self)) { params, _ in
+                try .real(Real.exp10(real(params[0])))
+            }
+        ]
+    }
+    
+   /// Returns a list of primitive boolean functions.
     static func booleanFunctions() -> [Function] {
         [
             Function(name: "<=", type: ([("lhs", Real.self), ("rhs", Real.self)], Bool.self)) { params, _ in
@@ -135,13 +160,13 @@ extension Function {
             },
             Function(name: ">=", type: ([("lhs", Real.self), ("rhs", Real.self)], Bool.self)) { params, _ in
                 try .bool(real(params[0]) >= real(params[1]))
-            },
+            }
         ]
     }
 
     /// Returns a list of all primitive functions.
     static func primitiveFunctions() -> [Function] {
-        arithmeticFunctions() + powerFunctions() + booleanFunctions()
+        constantFunctions() + arithmeticFunctions() + powerFunctions() + exponentialFunctions() + booleanFunctions()
     }
 
     // MARK: -
