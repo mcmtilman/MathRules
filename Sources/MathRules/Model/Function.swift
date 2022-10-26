@@ -149,6 +149,21 @@ extension Function {
         ]
     }
     
+    /// Returns a list of logarithmic functions.
+    static func logarithmicFunctions() -> [Function] {
+        [
+            Function(name: "log", type: ([("x", Real.self)], Real.self)) { params, _ in
+                try .real(Real.log(real(params[0])))
+            },
+            Function(name: "log2", type: ([("x", Real.self)], Real.self)) { params, _ in
+                try .real(Real.log2(real(params[0])))
+            },
+            Function(name: "log10", type: ([("x", Real.self)], Real.self)) { params, _ in
+                try .real(Real.log10(real(params[0])))
+            }
+        ]
+    }
+    
    /// Returns a list of primitive boolean functions.
     static func booleanFunctions() -> [Function] {
         [
@@ -166,7 +181,7 @@ extension Function {
 
     /// Returns a list of all primitive functions.
     static func primitiveFunctions() -> [Function] {
-        constantFunctions() + arithmeticFunctions() + powerFunctions() + exponentialFunctions() + booleanFunctions()
+        constantFunctions() + arithmeticFunctions() + powerFunctions() + exponentialFunctions() + logarithmicFunctions() + booleanFunctions()
     }
 
     // MARK: -

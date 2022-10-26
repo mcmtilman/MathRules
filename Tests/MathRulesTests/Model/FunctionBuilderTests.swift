@@ -207,6 +207,60 @@ class FunctionBuilderTests: XCTestCase {
         XCTAssertEqual(try function.eval(inContext: context, with: []), .real(100))
     }
     
+    func testParameterizedLogarithm() throws {
+        let library = try XCTUnwrap(Library())
+        let context = Context(library: library)
+        let builder = FunctionBuilder()
+        let function = try builder.buildFunction(name: "Function", instructions: [.param(0), .apply("log")], library: library)
+         
+        XCTAssertEqual(try function.eval(inContext: context, with: params(3)), .real(1.0986122886681098))
+     }
+     
+    func testFixedLogarithm() throws {
+        let library = try XCTUnwrap(Library())
+        let context = Context(library: library)
+        let builder = FunctionBuilder()
+        let function = try builder.buildFunction(name: "Function", instructions: [.const(.int(3)), .apply("log")], library: library)
+        
+        XCTAssertEqual(try function.eval(inContext: context, with: []), .real(1.0986122886681098))
+    }
+    
+    func testParameterizedLogarithm2() throws {
+        let library = try XCTUnwrap(Library())
+        let context = Context(library: library)
+        let builder = FunctionBuilder()
+        let function = try builder.buildFunction(name: "Function", instructions: [.param(0), .apply("log2")], library: library)
+         
+        XCTAssertEqual(try function.eval(inContext: context, with: params(3)), .real(1.584962500721156))
+     }
+     
+    func testFixedLogarithm2() throws {
+        let library = try XCTUnwrap(Library())
+        let context = Context(library: library)
+        let builder = FunctionBuilder()
+        let function = try builder.buildFunction(name: "Function", instructions: [.const(.int(3)), .apply("log2")], library: library)
+        
+        XCTAssertEqual(try function.eval(inContext: context, with: []), .real(1.584962500721156))
+    }
+    
+    func testParameterizedLogarithm10() throws {
+        let library = try XCTUnwrap(Library())
+        let context = Context(library: library)
+        let builder = FunctionBuilder()
+        let function = try builder.buildFunction(name: "Function", instructions: [.param(0), .apply("log10")], library: library)
+         
+        XCTAssertEqual(try function.eval(inContext: context, with: params(3)), .real(0.47712125471966244))
+     }
+     
+    func testFixedLogarithm10() throws {
+        let library = try XCTUnwrap(Library())
+        let context = Context(library: library)
+        let builder = FunctionBuilder()
+        let function = try builder.buildFunction(name: "Function", instructions: [.const(.int(3)), .apply("log10")], library: library)
+        
+        XCTAssertEqual(try function.eval(inContext: context, with: []), .real(0.47712125471966244))
+    }
+    
     func testHypotenuse() throws {
         let library = try XCTUnwrap(Library())
         let context = Context(library: library)

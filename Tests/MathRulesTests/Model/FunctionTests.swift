@@ -62,6 +62,7 @@ class FunctionTests: XCTestCase {
         let context = Context(library: library)
         let function = try XCTUnwrap(library["power"])
 
+        XCTAssertEqual(try function.eval(inContext: context, with: params(0, 0)), .real(1))
         XCTAssertEqual(try function.eval(inContext: context, with: params(4, 1.5)), .real(8))
     }
 
@@ -70,6 +71,7 @@ class FunctionTests: XCTestCase {
         let context = Context(library: library)
         let function = try XCTUnwrap(library["powern"])
 
+        XCTAssertEqual(try function.eval(inContext: context, with: params(0, 0)), .real(1))
         XCTAssertEqual(try function.eval(inContext: context, with: params(3, 2)), .real(9))
     }
 
@@ -104,6 +106,7 @@ class FunctionTests: XCTestCase {
         let context = Context(library: library)
         let function = try XCTUnwrap(library["exp"])
 
+        XCTAssertEqual(try function.eval(inContext: context, with: params(0)), .real(1))
         XCTAssertEqual(try function.eval(inContext: context, with: params(1)), .real(Real.exp(1)))
         XCTAssertEqual(try function.eval(inContext: context, with: params(2)), .real(Real.exp(2)))
     }
@@ -113,6 +116,7 @@ class FunctionTests: XCTestCase {
         let context = Context(library: library)
         let function = try XCTUnwrap(library["exp2"])
 
+        XCTAssertEqual(try function.eval(inContext: context, with: params(0)), .real(1))
         XCTAssertEqual(try function.eval(inContext: context, with: params(1)), .real(2))
         XCTAssertEqual(try function.eval(inContext: context, with: params(8)), .real(256))
     }
@@ -122,8 +126,41 @@ class FunctionTests: XCTestCase {
         let context = Context(library: library)
         let function = try XCTUnwrap(library["exp10"])
 
+        XCTAssertEqual(try function.eval(inContext: context, with: params(0)), .real(1))
         XCTAssertEqual(try function.eval(inContext: context, with: params(1)), .real(10))
         XCTAssertEqual(try function.eval(inContext: context, with: params(3)), .real(1000))
+    }
+
+    // MARK: Logarithmic function tests
+
+    func testLogarithm() throws {
+        let library = try XCTUnwrap(Library())
+        let context = Context(library: library)
+        let function = try XCTUnwrap(library["log"])
+
+        XCTAssertEqual(try function.eval(inContext: context, with: params(1)), .real(0))
+        XCTAssertEqual(try function.eval(inContext: context, with: params(3)), .real(1.0986122886681098))
+        XCTAssertEqual(try function.eval(inContext: context, with: params(Real.exp(3))), .real(3))
+    }
+
+    func testLogarithm2() throws {
+        let library = try XCTUnwrap(Library())
+        let context = Context(library: library)
+        let function = try XCTUnwrap(library["log2"])
+
+        XCTAssertEqual(try function.eval(inContext: context, with: params(1)), .real(0))
+        XCTAssertEqual(try function.eval(inContext: context, with: params(3)), .real(1.584962500721156))
+        XCTAssertEqual(try function.eval(inContext: context, with: params(Real.exp2(3))), .real(3))
+    }
+
+    func testLogarithm10() throws {
+        let library = try XCTUnwrap(Library())
+        let context = Context(library: library)
+        let function = try XCTUnwrap(library["log10"])
+
+        XCTAssertEqual(try function.eval(inContext: context, with: params(1)), .real(0))
+        XCTAssertEqual(try function.eval(inContext: context, with: params(3)), .real(0.47712125471966244))
+        XCTAssertEqual(try function.eval(inContext: context, with: params(Real.exp10(3))), .real(3))
     }
 
     // MARK: Boolean function tests
