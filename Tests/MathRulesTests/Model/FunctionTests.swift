@@ -57,6 +57,8 @@ class FunctionTests: MathRulesTests {
         XCTAssertEqual(try function.eval(inContext: context, with: params(3, 4)), .real(0.75))
     }
 
+    // MARK: Power function tests
+
     func testPower() throws {
         let library = try XCTUnwrap(Library())
         let context = Context(library: library)
@@ -131,7 +133,7 @@ class FunctionTests: MathRulesTests {
         XCTAssertEqual(try function.eval(inContext: context, with: params(3)), .real(1000))
     }
 
-    // MARK: Logarithmic function tests
+    // MARK: Logarithm function tests
 
     func testLogarithm() throws {
         let library = try XCTUnwrap(Library())

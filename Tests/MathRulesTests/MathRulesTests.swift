@@ -8,11 +8,7 @@
 
 import XCTest
 
-#if DEBUG
-    @testable import MathRules
-#else
-    import MathRules
-#endif
+import MathRules
 
 /**
  Common utility functions for tests.

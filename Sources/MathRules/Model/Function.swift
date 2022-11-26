@@ -45,10 +45,12 @@ public struct Function {
     
     // MARK: -
     
-    /// The function name must be unique in a given context.
+    /// The function name.
+    /// Must be unique in a given context.
     public let name: String
     
-    /// Signature of the function. Parameters have a type and a name.
+    /// Signature of the function.
+    /// Parameters have a name and a type.
     public let type: ([(String, Any.Type)], Any.Type)
     
     /// Flag indicating if this is a predefined function.

@@ -301,9 +301,9 @@ public struct FunctionBuilder {
             
             stack.replaceSubrange(range, with: [node])
         }
-        guard stack.count == 1, let node = stack.first else { throw FunctionError.invalidInstructions }
+        guard stack.count == 1 else { throw FunctionError.invalidInstructions }
         
-        return node
+        return stack[0]
     }
     
     // MARK: -
@@ -322,7 +322,7 @@ public struct FunctionBuilder {
         case let .recur(name):
             guard name == functionName else { throw FunctionError.invalidRecursion(name) }
             
-            return try RecurNode(name: functionName, parameterCount: try inferType(instructions).0.count, stack: stack)
+            return try RecurNode(name: name, parameterCount: try inferType(instructions).0.count, stack: stack)
         case let .map(name):
             return try MapNode(name: name, library: library, stack: stack)
         case let .reduce(name):
@@ -331,16 +331,11 @@ public struct FunctionBuilder {
     }
     
     // 'Infers' the type of the function.
-    // Currently limited to collecting the required parameters, assumed to be of type R.
+    // Currently limited to collecting the required parameters, assumed to be of type Real.
     private func inferType(_ instructions: [Instruction]) throws -> ([(String, Any.Type)], Any.Type) {
-        var indices = Set<Int>()
-        
-        for instruction in instructions {
-            if case let .param(index) = instruction {
-                indices.insert(index)
-            }
+        let indices = instructions.reduce(into: Set<Int>()) { indices, instruction in
+            if case let .param(index) = instruction { indices.insert(index) }
         }
-        
         if let index = (indices.first { $0 < 0 || $0 >= indices.count }) { throw FunctionError.invalidParameterIndex(index) }
 
         return ((0 ..< indices.count).map { ("param\($0)", Real.self) }, Real.self)
@@ -436,7 +431,7 @@ extension RecurNode {
     
     // MARK: -
 
-    /// Debug description representing a function call in a Lisp-like format.
+    /// Debug description representing a recursive function call in a Lisp-like format.
     var debugDescription: String {
         let parameters = parameterNodes.map { node in " \(node.debugDescription)" }
         
@@ -466,7 +461,7 @@ extension ReduceNode {
     
     // MARK: -
 
-    /// Debug description representinga reduce operation in a Lisp-like format.
+    /// Debug description representing a reduce operation in a Lisp-like format.
     var debugDescription: String {
         "(reduce \"\(name)\" \(initialResultNode.debugDescription) \(listNode.debugDescription))"
     }

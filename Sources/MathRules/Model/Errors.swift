@@ -6,14 +6,14 @@
 //
 
 /**
- Function errors.
+ Function builder and evaluation errors.
  */
 public enum FunctionError: Error, Equatable {
 
     /// An attempt is made to register a UDF overriding a predefined function.
     case duplicateFunction(String)
     
-    /// The recursic call is not correct.
+    /// The recursive call targets another function.
     case invalidRecursion(String)
     
     /// The instruction stack is not correct.
@@ -22,7 +22,7 @@ public enum FunctionError: Error, Equatable {
     /// Parameter references should be in the range 0 ..< parameters count.
     case invalidParameterIndex(Int)
     
-    /// Occurs when a function call or map references a non-existing function (name).
+    /// Occurs when a function call, map or reduce references a non-existing function (name).
     case unknownFunction(String)
 
 }
@@ -41,7 +41,7 @@ public enum EvalError: Error, Equatable {
     /// A parameter or constant does not have the expected type.
     case invalidType
     
-    /// An attempt is made to call or map a function with a non-existing name.
+    /// An attempt is made to call or map / reduce a function with a non-existing name.
     case unknownFunction(String)
 
 }
