@@ -22,6 +22,9 @@ public enum Instruction {
     /// Represents a function call.
     case apply(String)
 
+    /// Represents a recursive function call.
+    case recur(String)
+
     /// Represents the application of a transformation function on a list.
     case map(String)
 
@@ -41,7 +44,7 @@ protocol Node: AnyObject, CustomDebugStringConvertible {
     /// Answers the number of child nodes.
     var childCount: Int { get }
     
-    /// Evalutes the node in given context with given variables and returns the result..
+    /// Evalutes the node with given context and parameters and returns the result.
     ///
     /// Throws ``EvalError``.
     func eval(inContext context: Context, with parameters: [Value]) throws -> Value
@@ -138,7 +141,7 @@ class ApplyNode: Node {
     
     // MARK: -
 
-    /// Name of the unction to be called.
+    /// Name of the function to be called.
     let name: String
     
     /// Parameters of the function call.
@@ -158,6 +161,42 @@ class ApplyNode: Node {
         
         self.name = name
         self.parameterNodes = Array(stack.suffix(function.parameterCount))
+    }
+
+}
+
+// MARK: -
+
+/**
+ Represents a recursive function call.
+ */
+class RecurNode: Node {
+    
+    // MARK: -
+
+    /// Name of the function to be called.
+    let name: String
+    
+    /// Number of parameters of the function call.
+    let parameterCount: Int
+    
+   /// Parameters of the function call.
+    let parameterNodes: [Node]
+    
+    /// The number of child nodes.
+    var childCount: Int {
+        parameterNodes.count
+    }
+    
+    // MARK: -
+
+    /// Creates a recursive functional call node with parameters on top of the stack.
+    init(name: String, parameterCount: Int, stack: [Node]) throws {
+        guard parameterCount >= 0, stack.count >= parameterCount else { throw FunctionError.invalidInstructions }
+        
+        self.name = name
+        self.parameterCount = parameterCount
+        self.parameterNodes = Array(stack.suffix(parameterCount))
     }
 
 }
@@ -257,7 +296,7 @@ public struct FunctionBuilder {
         var stack = [Node]()
         
         for i in 0 ..< instructions.count {
-            let node = try buildNode(instructions[i], library, stack)
+            let node = try buildNode(name, instructions, i, library, stack)
             let range = stack.count - node.childCount ..< stack.count
             
             stack.replaceSubrange(range, with: [node])
@@ -270,8 +309,8 @@ public struct FunctionBuilder {
     // MARK: -
 
     // Returns a node depending on the type of instruction.
-    private func buildNode(_ instruction: Instruction, _ library: Context.Library, _ stack: [Node]) throws -> Node {
-        switch instruction {
+    private func buildNode(_ functionName: String, _ instructions: [Instruction], _ index: Int, _ library: Context.Library, _ stack: [Node]) throws -> Node {
+        switch instructions[index] {
         case let .const(value):
             return ConstantNode(value: value)
         case let .param(index):
@@ -280,6 +319,10 @@ public struct FunctionBuilder {
             return try ConditionNode(stack: stack)
         case let .apply(name):
             return try ApplyNode(name: name, library: library, stack: stack)
+        case let .recur(name):
+            guard name == functionName else { throw FunctionError.invalidRecursion(name) }
+            
+            return try RecurNode(name: functionName, parameterCount: try inferType(instructions).0.count, stack: stack)
         case let .map(name):
             return try MapNode(name: name, library: library, stack: stack)
         case let .reduce(name):
@@ -374,6 +417,22 @@ extension ConditionNode {
 // MARK: -
 
 extension ApplyNode {
+    
+    // MARK: -
+
+    /// Debug description representing a function call in a Lisp-like format.
+    var debugDescription: String {
+        let parameters = parameterNodes.map { node in " \(node.debugDescription)" }
+        
+        return "(\(name)\(parameters.joined()))"
+    }
+    
+}
+
+
+// MARK: -
+
+extension RecurNode {
     
     // MARK: -
 

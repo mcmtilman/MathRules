@@ -16,7 +16,7 @@ import XCTest
 /**
  Tests building and evaluating functions.
  */
-class FunctionBuilderTests: XCTestCase {
+class FunctionBuilderTests: MathRulesTests {
     
     // MARK: Custom function builder tests
 
@@ -303,6 +303,50 @@ class FunctionBuilderTests: XCTestCase {
         XCTAssertEqual(try function.eval(inContext: context, with: params(5)), .real(120))
     }
     
+    func testInvalidRecursion() throws {
+        let library = try XCTUnwrap(Library())
+        let builder = FunctionBuilder()
+        let instructions: [Instruction] = [
+            .param(0),
+            .const(.int(0)),
+            .apply("<="),
+            .const(.int(1)),
+            .param(0),
+            .const(.int(1)),
+            .apply("-"),
+            .recur("fib"),
+            .param(0),
+            .apply("*"),
+            .cond
+        ]
+        XCTAssertThrowsError(try builder.buildFunction(name: "fac", instructions: instructions, library: library)) { error in
+            XCTAssertEqual(error as? FunctionError, .invalidRecursion("fib"))
+        }
+    }
+    
+    func testRecursiveFactorial() throws {
+        let library = try XCTUnwrap(Library())
+        let context = Context(library: library)
+        let builder = FunctionBuilder()
+        let instructions: [Instruction] = [
+            .param(0),
+            .const(.int(0)),
+            .apply("<="),
+            .const(.int(1)),
+            .param(0),
+            .const(.int(1)),
+            .apply("-"),
+            .recur("fac"),
+            .param(0),
+            .apply("*"),
+            .cond
+        ]
+        let function = try builder.buildFunction(name: "fac", instructions: instructions, library: library)
+        try library.register(function: function)
+        
+        XCTAssertEqual(try function.eval(inContext: context, with: params(5)), .real(120))
+    }
+    
     func testFibonacci() throws {
         let library = try XCTUnwrap(Library())
         let context = Context(library: library)
@@ -336,6 +380,36 @@ class FunctionBuilderTests: XCTestCase {
         XCTAssertEqual(try function.eval(inContext: context, with: params(7)), .real(13))
     }
     
+    func testRecursiveFibonacci() throws {
+        let library = try XCTUnwrap(Library())
+        let context = Context(library: library)
+        let builder = FunctionBuilder()
+        let instructions: [Instruction] = [
+            .param(0),
+            .const(.int(0)),
+            .apply("<="),
+            .const(.int(0)),
+            .param(0),
+            .const(.int(1)),
+            .apply("=="),
+            .const(.int(1)),
+            .param(0),
+            .const(.int(1)),
+            .apply("-"),
+            .recur("fib"),
+            .param(0),
+            .const(.int(2)),
+            .apply("-"),
+            .recur("fib"),
+            .apply("+"),
+            .cond,
+            .cond
+        ]
+        let function = try builder.buildFunction(name: "fib", instructions: instructions, library: library)
+        try library.register(function: function)
+        
+        XCTAssertEqual(try function.eval(inContext: context, with: params(7)), .real(13))
+    }
     func testMapSquare() throws {
         let library = try XCTUnwrap(Library())
         let context = Context(library: library)
@@ -428,8 +502,6 @@ class FunctionBuilderTests: XCTestCase {
     func testDebugDescription() throws {
         let library = try XCTUnwrap(Library())
         let builder = FunctionBuilder()
-        let stub = try builder.buildFunction(name: "fib", instructions: [.param(0)], library: library)
-        try library.register(function: stub)
         let instructions: [Instruction] = [
             .param(0),
             .const(.int(0)),
@@ -442,11 +514,11 @@ class FunctionBuilderTests: XCTestCase {
             .param(0),
             .const(.int(1)),
             .apply("-"),
-            .apply("fib"),
+            .recur("fib"),
             .param(0),
             .const(.int(2)),
             .apply("-"),
-            .apply("fib"),
+            .recur("fib"),
             .apply("+"),
             .cond,
             .cond
@@ -483,34 +555,4 @@ class FunctionBuilderTests: XCTestCase {
 
 #endif
     
-}
-    
-extension FunctionBuilderTests {
-    
-    // Utility functions.
-    
-    func params(_ elements: Int...) -> [Value] {
-        elements.map(Value.int)
-    }
-
-    func params(_ elements: Double...) -> [Value] {
-        elements.map(Value.real)
-    }
-    
-    func list(_ elements: Int...) -> Value {
-        list(elements)
-    }
-
-    func list<T: Sequence>(_ list: T) -> Value where T.Element == Int {
-        .list(list.map(Value.int))
-    }
-
-    func list(_ elements: Real...) -> Value {
-        .list(elements.map(Value.real))
-    }
-
-    // Shortcuts for MathRules types.
-    
-    typealias Library = Context.Library
-
 }

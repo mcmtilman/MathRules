@@ -35,21 +35,20 @@ public struct Context {
         /// Registers given function. Fails if its name overrides a predefined function.
         public func register(function: Function) throws {
             if let f = (functions[function.name]?.first {
-                let x = function.type.0.map(\.1)
-                print(x)
-                return distance($0.type.0.map(\.1), function) == 0 }) {
-                if f.isPredefined { throw FunctionError.duplicateFunction(function.name)
-                } else {
-                    functions[function.name]?.removeAll { distance($0.type.0.map(\.1), function) == 0 }
-                }
+                distance($0.type.0.map(\.1), function) == 0 }) {
+                    if f.isPredefined {
+                        throw FunctionError.duplicateFunction(function.name)
+                    } else {
+                        functions[function.name]?.removeAll { distance($0.type.0.map(\.1), function) == 0 }
+                    }
             }
            
             functions[function.name, default: []].append(function)
         }
         
         func distance(_ paramTypes: [Any.Type], _ function: Function) -> Int {
+            guard paramTypes.count > 0 else { return 0 }
             guard paramTypes.count == function.parameterCount else { return Int.max }
-            if paramTypes.count == 0 { return 0 }
             var distance = 0
             
             for i in 0 ..< paramTypes.count {

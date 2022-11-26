@@ -107,6 +107,27 @@ extension ApplyNode {
 
 // MARK: -
 
+extension RecurNode {
+    
+    // MARK: -
+
+    /// Evaluates the recursive function call node in given context.
+    ///
+    /// The parameters must match the type of the function.
+    /// Throws an ``EvalError``.
+    func eval(inContext context: Context, with parameters: [Value]) throws -> Value {
+        guard let function = context[function: name] else { throw EvalError.unknownFunction(name) }
+        guard parameterNodes.count == function.parameterCount else { throw EvalError.invalidParameters }
+        let parameters = try parameterNodes.map { try $0.eval(inContext: context, with: parameters) }
+
+        return try function.eval(inContext: context, with: parameters)
+    }
+
+}
+
+
+// MARK: -
+
 extension MapNode {
     
     // MARK: -

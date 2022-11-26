@@ -11,7 +11,7 @@ import MathRules
 /**
  Tests functions.
  */
-class FunctionTests: XCTestCase {
+class FunctionTests: MathRulesTests {
     
     // MARK: Constant function tests
 
@@ -200,7 +200,7 @@ class FunctionTests: XCTestCase {
     func testUnaryFunctionInvalidParameterCount() throws {
         let library = try XCTUnwrap(Library())
         let context = Context(library: library)
-        let names = ["sqr", "sqrt", "exp", "exp2", "exp10"]
+        let names = ["sqr", "sqrt", "exp", "exp2", "exp10", "log", "log2", "log10"]
 
         for name in names {
             let function = try XCTUnwrap(library[name])
@@ -228,31 +228,5 @@ class FunctionTests: XCTestCase {
             }
         }
     }
-    
-}
-
-
-extension FunctionTests {
-    
-    // Utility functions.
-    
-    func params(_ elements: Int...) -> [Value] {
-        params(elements)
-    }
-
-    func params(_ list: [Int]) -> [Value] {
-        list.map(Value.int)
-    }
-    
-    func params(_ elements: Double...) -> [Value] {
-        params(elements)
-    }
-    
-    func params(_ list: [Double]) -> [Value] {
-        list.map(Value.real)
-    }
-    
-    // Shortcuts for MathRules types.
-    typealias Library = Context.Library
     
 }

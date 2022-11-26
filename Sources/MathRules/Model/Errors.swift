@@ -13,6 +13,9 @@ public enum FunctionError: Error, Equatable {
     /// An attempt is made to register a UDF overriding a predefined function.
     case duplicateFunction(String)
     
+    /// The recursic call is not correct.
+    case invalidRecursion(String)
+    
     /// The instruction stack is not correct.
     case invalidInstructions
     

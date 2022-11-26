@@ -16,7 +16,7 @@ import XCTest
 /**
  Tests contexts.
  */
-class ContextTests: XCTestCase {
+class ContextTests: MathRulesTests {
     
     // MARK: Function library tests
     
@@ -93,13 +93,5 @@ class ContextTests: XCTestCase {
     }
 
 #endif
-    
-}
-
-
-extension ContextTests {
-    
-    // Shortcuts for MathRules types.
-    typealias Library = Context.Library
     
 }
